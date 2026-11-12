@@ -55,7 +55,7 @@ if demo_key:
     alias = "voltro-demo"
     if not keystore.exists():
         if not password_file.exists():
-            with password_file.open("x", opener=lambda path, flags: os.open(path, flags, 0o600)) as file:
+            with open(password_file, "x", opener=lambda path, flags: os.open(path, flags, 0o600)) as file:
                 file.write(secrets.token_urlsafe(48))
         os.chmod(password_file, 0o600)
         run([jdk / "bin/keytool", "-genkeypair", "-keystore", keystore, "-storetype", "PKCS12",
