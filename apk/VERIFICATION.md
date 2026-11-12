@@ -1,6 +1,6 @@
 # Release 검증 기록
 
-빌드 규격: release, version 1.0.0-mvp / code 2, application ID `com.qqaazz0222.voltro`, min API 28.
+빌드 규격: release, version 1.0.0-mvp / code 3, application ID `com.qqaazz0222.voltro`, min API 28. 새 VOLTRO 로고를 반영한 빌드다.
 
 `VOLTRO_VOLTRO_release.json`에 이 APK의 정확한 소스 커밋·SHA-256·서명 인증서 fingerprint가 있다. APK는 zipalign과 apksigner 검증을 통과했으며 non-debuggable이다. 빌드 성공만으로 실행 성공을 판단하지 않았다.
 
@@ -13,3 +13,5 @@
 5. 주행 완료 리포트 및 로컬 이력 표시.
 
 검사 스크립트: `scripts/smoke_submission.py`. 원본 runtime 로그·UI dump·스크린샷은 Git에서 제외한 `artifacts/release-smoke/`에 기록한다. 이 파일은 실차 SDK·실도로·Pleos Market 심사 통과를 인증하지 않는다.
+
+로고 변경 후에도 위 6개 UI 검사 항목을 서명된 APK에서 다시 통과했다. 같은 소스의 debug 빌드로 Pleos Connect 2.1.0의 새 헤더·GNB 아이콘, 주야간 로고와 Vehicle SDK SOC 100% 읽기를 직접 확인했다. [사용자 가이드](../docs/user-guide/README.md)의 실제 화면 8개도 새로 캡처했다.

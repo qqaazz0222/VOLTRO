@@ -75,3 +75,12 @@
 - 수정된 release APK(약 4.3MiB)는 별도 Android API 37 userdata에서 실행·SDK 미지원 fallback·경로 비교·분기점 승인·완료 리포트·이력 저장 UI 검사를 통과했다. 서명 및 실행 검증 전 APK를 정상 산출물로 처리하지 않았다.
 - Pleos SDK는 첫 읽기와 cold boot 후 읽기에 성공했다. 앱 재설치 직후 capability callback timeout도 재현했으므로 반복 연결 안정성은 제약으로 남긴다. 실패 시 차량 입력을 유지한다.
 - cold boot 후 같은 프로세스에서 `initialize → 읽기 → release`를 두 차례 연속 수행하는 SDK 테스트도 통과했다. 재설치 직후의 서비스 응답 지연과 구분한다.
+
+## 로고 개편과 실행 화면 갱신
+
+- Pleos의 48dp iconography와 adaptive icon 전경·배경 구조를 확인하고, 합쳐지는 경로 V와 에너지 꺾임을 연결한 자체 채움형 심볼을 제작했다. 앱 헤더·adaptive/monochrome·모든 밀도별 WebP 아이콘을 같은 원본에서 생성한다.
+- Asta Sans 워드마크와 ink/white/blue 심볼, 투명 PNG·SVG, 앱 아이콘과 브랜드 미리보기를 `design/brand/`에 제공한다. Word 가이드의 APK 해시는 패키징 메타데이터에서 가져오도록 변경했다.
+- Android debug 빌드·기존 단위 테스트·lint 성공. versionCode 3의 non-debuggable release를 같은 데모 키로 다시 서명하고 zipalign·v3 서명을 검증했다. 서명된 새 APK의 실제 UI 검사 6개 항목을 모두 통과했다.
+- Pleos Connect 2.1.0에서 새 헤더와 시스템 GNB 앱 아이콘, 주간·야간 로고를 확인했다. 재부팅 후 SDK SOC 100% 읽기도 성공했다. 캡처는 에뮬레이터 값이며 실차 측정값이 아니다.
+- 사용자 가이드의 실제 화면 8개를 모두 다시 캡처했다. 원본 이미지·빌드 유형·APK SHA-256·소스 커밋을 `docs/user-guide/CAPTURE_INFO.json`에 보존한다.
+- Word/PDF 10페이지를 다시 렌더링하여 한글·표·새 로고 배치를 확인했다. DOCX에 포함된 8개 이미지가 새 캡처의 SHA-256과 정확히 일치하고, 가이드 마지막 페이지의 APK 해시도 새 배포본과 일치한다.

@@ -2,12 +2,11 @@
   "title": "VOLTRO user guide screenshot provenance",
   "guide_date": "2026-11-12",
   "application_id": "com.qqaazz0222.voltro",
-  "release_source_commit": "95fcc289c7d4a3eecd9a392a29d4203e7bb02e35",
+  "release_source_commit": "cd1ab1189420b75e17be961a405525909306f185",
   "notes": [
     "Images are raw screenshots from running Android apps; no generated or edited UI images are used.",
     "Portrait screens use the signed contest release APK. Wide Pleos screens use the development build.",
-    "Routes and driving are synthetic simulations. SOC 100% on pleos-sdk.png is a real SDK response from an emulator, not a physical vehicle measurement.",
-    "The debug APK hash was not preserved with the Pleos captures."
+    "Routes and driving are synthetic simulations. SOC 100% on pleos-sdk.png is a real SDK response from an emulator, not a physical vehicle measurement."
   ],
   "screenshots": [
     {
@@ -19,12 +18,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "f65136764fbdee1e1aa5d31c5a95598cd80e213be9386e4ae3d69c8dcf73e3bd",
+      "sha256": "5d4c5b4bc70601e6a5f15230d6710dc719b9be62668b9d76b1957cd13c307047",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "verified release smoke run"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/routes-list.png",
@@ -35,12 +36,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "289e7628d15321b4a192c5782ea85e22eebee7389f5e524bdde5d7921ea11bb3",
+      "sha256": "c024bf514efc2887e3cde583b48968b22a7916c7972259ca55cabc111b4c98ac",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "fresh guide capture"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/junction.png",
@@ -51,12 +54,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "be352b9d067528a87c2c98ab1a9d3be5f6e145fa72ecd36c1adea83d56b4f85f",
+      "sha256": "432616fe76805b85178b685e7e3c6b14250ab4974e188949740787a398c4868f",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "verified release smoke run"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/report.png",
@@ -67,12 +72,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "252af969eb8b99d5a00258b3cbdd024f957835bd0790bf6106fb6c5a6cc08c3d",
+      "sha256": "0006ccc588ac22898c7f05510884f717466a86dc46473c40bbb2eaded3f96611",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "verified release smoke run"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/history.png",
@@ -83,12 +90,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "11edcf5f8de0422d9fa7ed97e4f117421657c8fba7a5cc82933cf18b0f7cd91c",
+      "sha256": "f379b77fa2e19f2c532845fcf09fb021a856b868092b5018c8aeb3d7be1ef379",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "verified release smoke run"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/settings.png",
@@ -99,12 +108,14 @@
       "original_unmodified": true,
       "width_px": 1080,
       "height_px": 2400,
-      "sha256": "a247fee9552d64a0ceb6cdf88c4ed92a0825e05beb9bc55160e73ccfe74b9881",
+      "sha256": "699627a8fee342fd4f81b9887dbd548dd412713ec2b6202b4ae60af55b368def",
       "app_version": "1.0.0-mvp",
       "build_type": "release",
       "environment": "Android API 37, 420 dpi",
-      "apk_sha256": "3ea598b79ad10dacbeff823179ed41da794c0f15c2f9473c12d0eacda38bff2d",
-      "capture_session": "fresh guide capture"
+      "apk_sha256": "842bb6cd76802137bb6e1f471e93b2b68e2726c7fc56477321ad965da7019ccb",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/pleos-home.png",
@@ -115,12 +126,14 @@
       "original_unmodified": true,
       "width_px": 2560,
       "height_px": 1440,
-      "sha256": "682ccb4fabcd0f9fb7f6f23696bfdfffd7cf81b44334354d3dc2402e58f828c2",
+      "sha256": "66aad9d5971c8f8f720c93cb30a93903870c823d42adc3a02fe627431ea416da",
       "app_version": "1.0.0-mvp",
       "build_type": "debug",
       "environment": "Pleos Connect 2.1.0, Android 14/API 34, 160 dpi",
-      "apk_sha256": null,
-      "capture_session": "fresh guide capture"
+      "apk_sha256": "5fb6055e1067e57d6c97c1a0e69549fdea93a988d2c5f51f5ed466edb4e96506",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     },
     {
       "file": "screenshots/pleos-sdk.png",
@@ -131,12 +144,15 @@
       "original_unmodified": true,
       "width_px": 2560,
       "height_px": 1440,
-      "sha256": "ae6be3bf64422092ebff46abccff62af84c8edf30cb974e77f3babbd8e32975a",
+      "sha256": "43d9f8e57f7542d4171e5aace02dceecf2313e5c0b1b48bdb0ed89b5aaedda1f",
       "app_version": "1.0.0-mvp",
       "build_type": "debug",
       "environment": "Pleos Connect 2.1.0, Android 14/API 34, 160 dpi",
-      "apk_sha256": null,
-      "capture_session": "fresh guide capture"
+      "apk_sha256": "5fb6055e1067e57d6c97c1a0e69549fdea93a988d2c5f51f5ed466edb4e96506",
+      "capture_session": "logo refresh; actual app recapture, not composited",
+      "version_code": 3,
+      "source_commit": "cd1ab1189420b75e17be961a405525909306f185"
     }
-  ]
+  ],
+  "brand_revision": "Filled V route and energy symbol, versionCode 3"
 }

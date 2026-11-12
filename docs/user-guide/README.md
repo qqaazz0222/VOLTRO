@@ -8,6 +8,8 @@
 
 기준 버전은 **1.0.0-mvp**, 작성일은 **2026년 11월 12일**입니다. 세로 화면은 저장소의 서명된 [release APK](../../apk/VOLTRO_VOLTRO_release.apk)를 Android API 37에서 실행해 캡처했습니다. 가로 화면은 Pleos Connect 2.1.0의 개발 빌드입니다. 모든 화면은 `adb exec-out screencap -p`로 수집한 수정 없는 실제 화면입니다.
 
+새 [VOLTRO 로고](../../design/brand/README.md)를 반영한 versionCode **3**에서 화면 8개를 모두 다시 캡처했습니다. Pleos 시스템 GNB의 앱 아이콘도 새 아이콘으로 표시됩니다. 캡처별 APK 해시는 `CAPTURE_INFO.json`에 보존합니다.
+
 경로·주행은 시뮬레이션이며, Pleos SDK의 SOC 100% 화면도 에뮬레이터의 응답입니다. 문서에서 개발 빌드와 release, SDK 값과 설정값을 구분합니다. 기본 시연은 로그인과 개발 서버 없이 진행합니다.
 
 ## 문서 재생성
