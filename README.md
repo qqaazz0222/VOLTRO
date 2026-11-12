@@ -6,6 +6,8 @@ Your Route. Your Energy.
 
 **공모전 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
 
+**실제 실행 화면 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
+
 `MVP_SPEC.md` 기반의 전기차 에너지 경로 비교 앱. 기존 Android Studio 프로젝트는 `VOLTRO/`, FastAPI 서버는 `backend/`에 있다.
 
 ## 개발 환경
