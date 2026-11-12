@@ -88,6 +88,7 @@ class PleosGuideCaptureTest {
                 assertTrue(it.resources.configuration.screenWidthDp >= 800)
                 vm = ViewModelProvider(it)[VoltroViewModel::class.java]
                 vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false, roadMode = true)
+                vm.clearNotice()
             }
             capture("pleos-home")
             click("Pleos 차량 상태 읽기")

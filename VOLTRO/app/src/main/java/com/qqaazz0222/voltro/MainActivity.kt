@@ -383,8 +383,9 @@ class MainActivity : ComponentActivity() {
             }, margin(bottom = 12))
         }
         if (state.history.isNotEmpty()) body.addView(button("기기 주행 이력 삭제") {
-            AlertDialog.Builder(this).setTitle("주행 이력을 삭제할까요?").setMessage("이 기기의 기록을 모두 삭제합니다. 개발 서버의 기록은 별도로 관리됩니다.")
-                .setNegativeButton("취소", null).setPositiveButton("삭제") { _, _ -> vm.deleteHistory() }.show()
+            readableDialog(AlertDialog.Builder(this).setCustomTitle(dialogTitle("주행 이력을 삭제할까요?"))
+                .setMessage("이 기기의 기록을 모두 삭제합니다. 개발 서버의 기록은 별도로 관리됩니다.")
+                .setNegativeButton("취소", null).setPositiveButton("삭제") { _, _ -> vm.deleteHistory() }.show())
         })
     }
 
@@ -412,7 +413,7 @@ class MainActivity : ComponentActivity() {
         fields.addView(button("서버 연결 확인", enabled = developerBuild) { withServerAccess { vm.checkServer() } })
         fields.addView(text("모든 주행은 시뮬레이션입니다. Pleos 실차 연결과 음성 안내는 SDK·정책 검증 전 비활성화됩니다.", 13f, muted), margin(top = 12))
         val error = text("", 18f, design.warning); fields.addView(error, margin(top = 12))
-        val dialog = AlertDialog.Builder(this).setTitle("에너지 & 데모 설정")
+        val dialog = AlertDialog.Builder(this).setCustomTitle(dialogTitle("에너지 & 데모 설정"))
             .setView(ScrollView(this).apply { addView(fields) }).setNegativeButton("취소", null).setPositiveButton("적용", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
@@ -426,14 +427,22 @@ class MainActivity : ComponentActivity() {
             }
         }
         dialog.show()
+        readableDialog(dialog)
+    }
+    private fun dialogTitle(value: String) = text(value, if (wide) 26f else 22f, white, true).apply {
+        setPadding(dp(24), dp(20), dp(24), dp(8)); ViewCompat.setAccessibilityHeading(this, true)
+    }
+    private fun readableDialog(dialog: AlertDialog) {
         if (wide) {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).textSize = 22f
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).textSize = 22f
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.textSize = 22f
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.textSize = 22f
+            dialog.findViewById<TextView>(android.R.id.message)?.textSize = 22f
         }
     }
     private fun confirmStop() {
-        AlertDialog.Builder(this).setTitle("Mock 주행을 취소할까요?").setMessage("진행 중인 시뮬레이션을 종료합니다.")
-            .setNegativeButton("계속 주행", null).setPositiveButton("주행 취소") { _, _ -> vm.stopDriving() }.show()
+        readableDialog(AlertDialog.Builder(this).setCustomTitle(dialogTitle("주행 재생을 취소할까요?"))
+            .setMessage("진행 중인 시뮬레이션을 종료합니다.")
+            .setNegativeButton("계속 주행", null).setPositiveButton("주행 취소") { _, _ -> vm.stopDriving() }.show())
     }
     private fun withServerAccess(action: () -> Unit) {
         val permission = "android.permission.ACCESS_LOCAL_NETWORK"

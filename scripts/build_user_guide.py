@@ -38,7 +38,7 @@ for name, size in [("Normal", 12), ("Title", 30), ("Subtitle", 13), ("Heading 1"
     style.font.color.rgb = RGBColor(0, 0, 0)
     style.element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), FONT)
     style.paragraph_format.space_after = Pt(8)
-    style.paragraph_format.line_spacing = 1.18
+    style.paragraph_format.line_spacing = Pt(size * 1.35)
     if name in ("Title", "Subtitle", "Heading 1", "Heading 2"):
         style.font.bold = name != "Subtitle"
         style.paragraph_format.keep_with_next = True
@@ -106,15 +106,24 @@ def note(title, text):
 def picture(filename, width, caption):
     paragraph = doc.add_paragraph()
     paragraph.paragraph_format.space_after = Pt(5)
+    paragraph.paragraph_format.line_spacing = 1.0
+    paragraph.paragraph_format.keep_with_next = True
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     shape = paragraph.add_run().add_picture(str(SHOTS / filename), width=Inches(width))
     shape._inline.docPr.set("descr", caption)
     paragraph = p(caption, "Caption")
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    paragraph.paragraph_format.keep_with_next = False
 
 
 def page():
-    section = doc.add_section(WD_SECTION_START.NEW_PAGE); setup(section)
+    section = doc.add_section(WD_SECTION_START.NEW_PAGE)
+    separator = doc.paragraphs[-1]
+    separator.paragraph_format.space_before = Pt(0)
+    separator.paragraph_format.space_after = Pt(0)
+    separator.paragraph_format.line_spacing = Pt(1)
+    separator.add_run().font.size = Pt(1)
+    setup(section)
 
 
 def screen_page(filename, title, intro, caption, width=8.0):
@@ -189,7 +198,7 @@ screen_page("pleos-sdk.png", "03 Pleos 차량 상태를 읽기",
 route_summary = " / ".join(f"{r['label']} {r['distance_km']:.1f}km·{r['minutes']:.0f}분·{r['energy_kwh']:.1f}kWh" for r in METRICS['routes'])
 screen_page("pleos-comparison.png", "04 실제 도로 경로를 비교하기",
     "카드를 눌러 경로를 선택합니다. 지도는 드래그와 +·−·전체 보기를 지원합니다. 반환된 실제 경로만 표시하며, 최소 도착 잔량을 충족해야 주행 재생을 시작할 수 있습니다.",
-    "화면 3  OpenStreetMap 지도와 OSRM 도로 2개 · SOC 100% 기준")
+    f"화면 3  OpenStreetMap 지도와 OSRM 도로 {len(METRICS['routes'])}개 · SOC 100% 기준")
 
 # 6 Replay
 screen_page("pleos-driving.png", "05 도로 위의 주행을 재생하기",
