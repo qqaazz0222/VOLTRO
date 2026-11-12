@@ -4,6 +4,7 @@
 Requires python-docx, Pillow, fonttools, and lxml. PDF/render QA is a separate step.
 """
 from pathlib import Path
+import json
 import uuid
 from io import BytesIO
 from fontTools.ttLib import TTFont
@@ -22,6 +23,7 @@ from docx.oxml.ns import qn
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/user-guide"
 SHOTS = OUT / "screenshots"
+RELEASE = json.loads((ROOT / "apk/VOLTRO_VOLTRO_release.json").read_text())
 FONT = "Asta Sans"
 doc = Document()
 doc.core_properties.title = "VOLTRO 사용자 가이드"
@@ -279,7 +281,7 @@ table(["보이는 상황", "확인할 내용", "사용자가 할 일"], [
 p("")
 note("현재 사용할 수 있는 범위", "현재 버전은 합성 경로를 비교하고 주행을 재생하는 시연용 앱입니다. 실제 도로 검색, GPS 주행 추적, 차량 내비게이션 경로 변경과 음성 안내는 제공하지 않습니다. Pleos SDK snapshot을 읽어도 경로와 주행은 데모로 유지됩니다.")
 note("숫자와 단위", "kWh는 소비 전력량, km/kWh는 전비, %는 배터리 잔량입니다. SOC 변화는 %p로 표기합니다. 예를 들어 68.0%에서 22.7%로 줄어든 차이는 45.3%p입니다.")
-p("화면과 기능 기준  앱 1.0.0-mvp / release APK SHA-256 앞자리 3ea598b79ad10dac  |  원본 화면과 캡처 정보는 같은 폴더의 screenshots 및 CAPTURE_INFO.json에서 확인할 수 있습니다.", "Caption")
+p(f"화면과 기능 기준  앱 {RELEASE['version_name']} / release APK SHA-256 앞자리 {RELEASE['sha256'][:16]}  |  원본 화면과 캡처 정보는 같은 폴더의 screenshots 및 CAPTURE_INFO.json에서 확인할 수 있습니다.", "Caption")
 
 OUT.mkdir(parents=True, exist_ok=True)
 # Embed OFL-licensed Asta Sans regular/bold fonts so Korean stays readable across machines.

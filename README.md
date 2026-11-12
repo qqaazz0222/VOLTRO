@@ -8,6 +8,8 @@ Your Route. Your Energy.
 
 **실제 실행 화면 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
 
+**로고와 앱 아이콘:** [브랜드 자산 및 SVG·PNG](design/brand/README.md).
+
 `MVP_SPEC.md` 기반의 전기차 에너지 경로 비교 앱. 기존 Android Studio 프로젝트는 `VOLTRO/`, FastAPI 서버는 `backend/`에 있다.
 
 ## 개발 환경

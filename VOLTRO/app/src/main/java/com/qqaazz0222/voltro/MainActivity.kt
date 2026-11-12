@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
         val bar = row().apply {
         gravity = Gravity.CENTER_VERTICAL
         addView(icon(R.drawable.ic_voltro), LinearLayout.LayoutParams(dp(48), dp(64)))
-        addView(text("VOLTRO", 23f, white, true).apply { letterSpacing = .14f }, LinearLayout.LayoutParams(0, -2, 1f))
+        addView(text("VOLTRO", 23f, white, true).apply { letterSpacing = .08f }, LinearLayout.LayoutParams(0, -2, 1f))
         addView(badge("●  MOCK", accent))
         if (wide) {
             addView(button(if (wide) "주행 이력" else "이력", enabled = state.driving == null && !state.busy) { vm.history() },

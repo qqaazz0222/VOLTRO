@@ -29,7 +29,7 @@ Grayscale 원색은 공식 표에 따른다. Light 배터리 green과 Dark 정�
 - Asta Sans 가변 폰트를 앱에 포함한다. 라이선스는 `licenses/AstaSans-OFL.txt`와 앱 assets에 있다.
 - 일반 UI 글자는 최소 18sp, 핵심 수치는 30–48sp, 기본 버튼은 64dp 높이를 사용한다.
 - 흑백 filled 주요 버튼, 중립색 보조 버튼, Ripple·haptic 피드백, 선택 카드 테두리를 적용한다.
-- VectorDrawable을 사용해 VOLTRO 고유 V/에너지 마크, 이력, 설정, 이동 아이콘을 구성한다. 시스템 로고나 타사 아이콘 파일은 복사하지 않는다.
+- VectorDrawable을 사용해 VOLTRO 고유 V/에너지 마크, 이력, 설정, 이동 아이콘을 구성한다. 시스템 로고나 타사 아이콘 파일은 복사하지 않는다. 로고는 경로가 합쳐지는 V와 에너지 꺾임을 연결한 채움형으로 새로 제작했다. 주야간 단색 로고와 청색 adaptive 앱 아이콘의 원본·사용법은 [브랜드 자산](../design/brand/README.md)에 있다.
 - adaptive launcher icon을 별도의 배경·전경으로 제공한다.
 - 차량의 넓은 화면에서는 2열, 작은 창에서는 1열로 전환한다. 시스템 바와 분할 창의 inset을 반영한다.
 - 경로 그림은 좌표 모식도라고 표시한다. 실제 도로 안내를 제공하는 화면으로 표현하지 않는다.
