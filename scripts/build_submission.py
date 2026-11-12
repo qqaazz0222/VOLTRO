@@ -104,7 +104,7 @@ metadata = {"apk": apk.name, "application_id": package[1], "version_code": int(p
     "version_name": package[3], "source_commit": commit, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
     "size_bytes": apk.stat().st_size, "certificate_sha256": fingerprint[1], "signing_identity": "local-contest-demo" if demo_key else "provided-key",
     "build_type": "release", "debuggable": False, "verified_signature_schemes": [3],
-    "scope": "Mock routing/driving with optional Pleos Vehicle SDK snapshot; no real navigation or production certification"}
+    "scope": "Real OSM/OSRM road route comparison and offline demo; simulated driving with optional Pleos Vehicle SDK snapshot; no GPS navigation or production certification"}
 apk.with_suffix(".json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
 apk.with_suffix(".sha256").write_text(f"{metadata['sha256']}  {apk.name}\n")
 print(json.dumps(metadata, ensure_ascii=False, indent=2))

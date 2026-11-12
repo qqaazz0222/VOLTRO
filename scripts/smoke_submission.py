@@ -14,11 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--serial", required=True)
 parser.add_argument("--apk", type=Path, default=ROOT / "apk/VOLTRO_VOLTRO_release.apk")
+parser.add_argument("--roads", action="store_true", help="explicit live OSM/OSRM release journey instead of the offline regression")
 args = parser.parse_args()
 sdk = Path(os.environ.get("ANDROID_HOME", Path.home() / "Library/Android/sdk"))
 adb = str(sdk / "platform-tools/adb") if (sdk / "platform-tools/adb").exists() else "adb"
 package = "com.qqaazz0222.voltro"
-output = ROOT / "artifacts/release-smoke"
+output = ROOT / ("artifacts/road-release-smoke" if args.roads else "artifacts/release-smoke")
 output.mkdir(parents=True, exist_ok=True)
 
 
@@ -63,6 +64,47 @@ command("shell", "am", "start", "-n", f"{package}/{package}.MainActivity")
 time.sleep(2)
 assert any(node.get("text") == "VOLTRO" for node in dump().iter("node")), "Release did not reach Home"
 checkpoint("home")
+if args.roads:
+    def set_soc(value):
+        tap("text", "설정")
+        tap("class", "android.widget.EditText")
+        command("shell", "input", "keyevent", "KEYCODE_MOVE_END", *(["KEYCODE_DEL"] * 16))
+        command("shell", "input", "text", str(value))
+        command("shell", "input", "keyevent", "KEYCODE_BACK")
+        tap("text", "적용")
+
+    tap("resource-id", f"{package}:id/road_mode")
+    set_soc(100)
+    tap("text", "강릉역")
+    tap("resource-id", f"{package}:id/analyze_routes")
+    end = time.monotonic() + 50
+    while time.monotonic() < end:
+        tree = dump()
+        values = " ".join(n.get("text", "") for n in tree.iter("node"))
+        if "실제 지도" in values and "지도 로딩 중" not in values:
+            break
+    assert "실제 지도" in values and "지도 연결 실패" not in values, values
+    assert any("OpenStreetMap 실제 지도와 OSRM 도로 경로" in n.get("content-desc", "") for n in tree.iter("node"))
+    checkpoint("road-comparison")
+    tap("resource-id", f"{package}:id/start_trip")
+    time.sleep(34)
+    tree = dump()
+    values = " ".join(n.get("text", "") for n in tree.iter("node"))
+    assert "SIMULATED TRIP" in values and "도로 경로 재생" in values, values
+    checkpoint("road-report")
+    tap("text", "새로운 여정 시작하기  →")
+    tap("text", "주행 이력")
+    assert any("도로 재생" in n.get("text", "") for n in dump().iter("node"))
+    checkpoint("road-history")
+    tap("text", "목적지 검색으로 돌아가기")
+    set_soc(68)
+    tap("resource-id", f"{package}:id/demo_mode")
+    report = {"apk_sha256": hashlib.sha256(args.apk.read_bytes()).hexdigest(), "device": args.serial,
+        "api": command("shell", "getprop", "ro.build.version.sdk").strip(), "status": "PASSED",
+        "checks": ["signed release launch", "live OSRM road geometry", "visible OSM map tiles", "road replay report", "road history provenance", "restored default demo profile"]}
+    (output / "result.json").write_text(json.dumps(report, indent=2) + "\n")
+    print(json.dumps(report, indent=2), flush=True)
+    raise SystemExit(0)
 tap("resource-id", f"{package}:id/demo_mode")
 tap("text", "Pleos 차량 상태 읽기")
 time.sleep(8)

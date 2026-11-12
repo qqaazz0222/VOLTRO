@@ -265,12 +265,12 @@ class MainActivity : ComponentActivity() {
                 if (safe) setOnClickListener { vm.selectRoute(route.id) }
             }
             option.addView(row().apply {
-                addView(text("${if (active) "●" else "○"}  ${route.label}", 19f, if (active) accent else white, true), LinearLayout.LayoutParams(0, -2, 1f))
+                addView(text("${if (active) "●" else "○"}  ${route.label}", if (wide) 24f else 19f, if (active) accent else white, true), LinearLayout.LayoutParams(0, -2, 1f))
                 if (route.id == comparison.recommendedId) addView(badge("추천", accent))
             }, margin(bottom = 10))
             option.addView(row().apply {
-                addView(text("${f(route.durationMinutes, 0)}분", 24f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-                addView(text("${f(route.energyKwh)} kWh", 24f, if (active) accent else white, true))
+                addView(text("${f(route.durationMinutes, 0)}분", if (wide) 32f else 24f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
+                addView(text("${f(route.energyKwh)} kWh", if (wide) 32f else 24f, if (active) accent else white, true))
             }, margin(bottom = 8))
             option.addView(text("${f(route.distanceKm)} km   ·   도착 ${f(route.arrivalSoc)}%   ·   ${route.roadName}", 13f, muted))
             if (!safe) option.addView(text("최소 도착 잔량 미달 · 선택 불가", 18f, design.warning), margin(top = 6))
