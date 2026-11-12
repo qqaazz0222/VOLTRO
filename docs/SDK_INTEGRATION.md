@@ -11,15 +11,16 @@
 | 기능 | 상태 |
 |---|---|
 | Mock 차량 SOC·전비·용량 | 구현 |
-| 사용자 입력 차량 프로필 | 구현, 시뮬레이션에만 적용 |
+| 사용자 입력 차량 프로필 | 구현, 소비량 예측·주행 재생 입력에 적용 |
 | Mock 경로·위치 재생 | 구현 |
 | Mock 목적지·경로 전환 | 운전자 명시적 승인 후 시뮬레이션에 적용 |
 | Pleos 차량 데이터 읽기 | Vehicle 2.3.2 SOC 및 누적 전비 snapshot 구현, Pleos 에뮬레이터 직접 읽기 통합 테스트 통과 |
 | Pleos 위치 읽기 | 미연동, 기기 위치 권한 요청 안 함 |
 | NaviHelper 목적지/경로 전환 | 미연동, capability=false |
 | TTS | 음성 권한·오디오 포커스·차량 정책 검증 전 비활성 |
-| 실제 도로 경로/고도 | 공급자 키·라이선스·국내 통행 검증 필요 |
-| 차량 주행 UX 제한 | 실차 상태 수신 미연동, 현재 Mock 화면만 제공 |
+| 실제 지도·도로 경로 | OSM raster 지도와 OSRM 자동차 경로 연결, 공개 데모 서비스 기반 |
+| 도로 고도·실시간 교통 | 미연동, 거리÷전비 baseline 유지 |
+| 차량 주행 UX 제한 | 실차 상태 수신 미연동, 도로 좌표 재생·Mock 화면 제공 |
 
 `PleosNavigationRepository`는 명시적인 Unsupported 결과를 반환하며 내비게이션 API를 호출하지 않는다. `PleosVehicleRepository`는 공식 SDK로 읽기만 수행한다. Location adapter는 아직 없으며 Mock 위치는 노드 사이를 보간한 값이다.
 
@@ -53,4 +54,4 @@
 - 백그라운드 진입 때 Mock 주행을 정지한다. Activity 재생성은 ViewModel이 유지한다. 프로세스 종료 후 진행 중 주행의 복원은 아직 지원하지 않으며 완료 이력만 복원한다.
 - 완료 리포트는 서버 전송 전에 기기에 저장한다. 서버 전송 실패는 다시 저장으로 재시도한다.
 
-Android 17/API 37에서는 로컬 개발 서버 TCP 접속에도 [로컬 네트워크 runtime 권한](https://developer.android.com/privacy-and-security/local-network-permission)이 필요하다. 이 권한은 debug manifest에만 선언하고 서버 기능 사용 때 요청한다. Release는 서버 옵션을 비활성화한 오프라인 Mock 데모다.
+Android 17/API 37에서는 로컬 개발 서버 TCP 접속에도 [로컬 네트워크 runtime 권한](https://developer.android.com/privacy-and-security/local-network-permission)이 필요하다. 이 권한은 debug manifest에만 선언하고 서버 기능 사용 때 요청한다. Release는 공개 HTTPS 실제 지도·도로 경로와 별도 오프라인 Mock 모드를 제공한다. 지도·요청 제한·외부 전송 범위는 [실제 지도 연동](REAL_MAPS.md)에 정리했다.

@@ -16,8 +16,9 @@ data class GeoPoint(val latitude: Double, val longitude: Double) {
     }
 }
 
-data class RouteNode(val id: String, val point: GeoPoint, val distanceKm: Double)
+data class RouteNode(val id: String, val point: GeoPoint, val distanceKm: Double, val elapsedMinutes: Double? = null)
 enum class RouteType { FASTEST, BALANCED, ECO }
+enum class RouteSource { MOCK, OSRM }
 data class Destination(val id: String, val name: String, val description: String, val point: GeoPoint)
 data class Preferences(val minArrivalSoc: Double = 15.0, val maxExtraMinutes: Double = 15.0, val minSavingKwh: Double = 1.0) {
     init {
@@ -30,7 +31,7 @@ data class RouteCandidate(
     val id: String, val type: RouteType, val label: String, val roadName: String,
     val distanceKm: Double, val durationMinutes: Double,
     val energyKwh: Double, val arrivalSoc: Double, val confidence: Double,
-    val nodes: List<RouteNode>,
+    val nodes: List<RouteNode>, val source: RouteSource = RouteSource.MOCK,
 ) {
     init {
         require(distanceKm.isFinite() && distanceKm > 0)
@@ -40,11 +41,18 @@ data class RouteCandidate(
         require(nodes.size >= 2 && nodes.first().distanceKm == 0.0)
         require(nodes.zipWithNext().all { (a, b) -> b.distanceKm > a.distanceKm })
         require(abs(nodes.last().distanceKm - distanceKm) < 0.001)
+        if (source == RouteSource.OSRM) {
+            require(nodes.all { it.elapsedMinutes?.let { t -> t.isFinite() && t >= 0 } == true })
+            require(nodes.zipWithNext().all { (a, b) -> b.elapsedMinutes!! >= a.elapsedMinutes!! })
+            require(abs(nodes.last().elapsedMinutes!! - durationMinutes) < .001)
+        }
     }
     fun pointAt(distance: Double): GeoPoint {
         val km = distance.coerceIn(0.0, distanceKm)
-        val (a, b) = nodes.zipWithNext().firstOrNull { (_, b) -> km <= b.distanceKm }
-            ?: return nodes.last().point
+        val index = nodes.binarySearch { it.distanceKm.compareTo(km) }
+        if (index >= 0) return nodes[index].point
+        val next = (-index - 1).coerceIn(1, nodes.lastIndex)
+        val a = nodes[next - 1]; val b = nodes[next]
         val t = (km - a.distanceKm) / (b.distanceKm - a.distanceKm)
         return GeoPoint(a.point.latitude + (b.point.latitude - a.point.latitude) * t,
             a.point.longitude + (b.point.longitude - a.point.longitude) * t)
@@ -55,4 +63,6 @@ data class RouteComparison(
     val tripId: String, val destination: Destination, val routes: List<RouteCandidate>,
     val recommendedId: String?, val provider: String, val calculatedAt: String,
     val remote: Boolean = false,
-)
+) {
+    val roadNetwork: Boolean get() = routes.isNotEmpty() && routes.all { it.source == RouteSource.OSRM }
+}

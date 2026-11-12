@@ -21,7 +21,7 @@ class BatteryGaugeView(context: Context, private val soc: Double) : View(context
         paint.style = Paint.Style.FILL; paint.typeface = design.boldFont
         paint.textAlign = Paint.Align.CENTER; paint.textSize = 46 * scale; paint.color = design.text
         canvas.drawText("${soc.toInt()}%", cx, cy + 8 * scale, paint)
-        paint.textSize = 18 * scale; paint.typeface = design.font; paint.color = design.secondaryText
+        paint.textSize = (if (resources.configuration.screenWidthDp >= 800) 22 else 18) * scale; paint.typeface = design.font; paint.color = design.secondaryText
         canvas.drawText("배터리 잔량", cx, cy + 36 * scale, paint)
     }
 }
@@ -66,7 +66,7 @@ class RouteMapView(context: Context, private val routes: List<RouteCandidate>, p
         paint.color = design.text; canvas.drawCircle(start.x, start.y, 6 * scale, paint)
         paint.color = design.positive; canvas.drawCircle(end.x, end.y, 8 * scale, paint)
         paint.color = design.surface; canvas.drawCircle(end.x, end.y, 3 * scale, paint)
-        paint.color = design.text; paint.textSize = 18 * scale; paint.typeface = design.font; paint.textAlign = Paint.Align.LEFT
+        paint.color = design.text; paint.textSize = (if (resources.configuration.screenWidthDp >= 800) 22 else 18) * scale; paint.typeface = design.font; paint.textAlign = Paint.Align.LEFT
         canvas.drawText("서울", start.x, start.y - 14 * scale, paint)
         paint.textAlign = Paint.Align.RIGHT; canvas.drawText("목적지", end.x, end.y + 25 * scale, paint)
         position?.let {

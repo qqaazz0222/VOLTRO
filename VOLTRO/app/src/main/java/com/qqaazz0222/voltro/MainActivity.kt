@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var root: LinearLayout
     private var currentScroll: ScrollView? = null
     private var renderedScreen: Screen? = null
+    private val comparisonCamera = RoadMapCamera()
+    private val drivingCamera = RoadMapCamera()
     private val wide get() = resources.configuration.screenWidthDp >= 800
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) { outState.putString("query", query); super.onSaveInstanceState(outState) }
     override fun onStop() {
         if (vm.state.value.driving?.paused == false) vm.pauseForBackground()
+        com.qqaazz0222.voltro.data.road.MapTileStore.flushInstalled()
         super.onStop()
     }
 
@@ -108,7 +111,7 @@ class MainActivity : ComponentActivity() {
             Screen.HOME -> root.addView(button(if (state.busy) "분석 중…" else "경로 분석하기  →", primary = true, enabled = !state.busy) {
                 hideKeyboard(); if (state.serverMode) withServerAccess { vm.analyze(query) } else vm.analyze(query)
             }.apply { id = R.id.analyze_routes })
-            Screen.COMPARISON -> root.addView(button(if (state.busy) "처리 중…" else "선택한 경로로 Mock 주행  →", true,
+            Screen.COMPARISON -> root.addView(button(if (state.busy) "처리 중…" else if (state.comparison?.roadNetwork == true) "선택한 경로로 주행 재생  →" else "선택한 경로로 Mock 주행  →", true,
                 !state.busy && state.selectedId != null) { vm.startDriving() }.apply { id = R.id.start_trip })
             Screen.REPORT -> root.addView(button("새로운 여정 시작하기  →", true, !state.busy) { query = ""; vm.home() })
             Screen.HISTORY -> root.addView(button("목적지 검색으로 돌아가기", true) { vm.home() })
@@ -121,11 +124,16 @@ class MainActivity : ComponentActivity() {
         val bar = row().apply {
         gravity = Gravity.CENTER_VERTICAL
         addView(icon(R.drawable.ic_voltro), LinearLayout.LayoutParams(dp(48), dp(64)))
-        addView(text("VOLTRO", 23f, white, true).apply { letterSpacing = .08f }, LinearLayout.LayoutParams(0, -2, 1f))
-        addView(badge("●  MOCK", accent))
+        addView(text("VOLTRO", if (wide) 26f else 23f, white, true).apply { letterSpacing = .08f }, LinearLayout.LayoutParams(0, -2, 1f))
+        val road = when (state.screen) {
+            Screen.HOME, Screen.HISTORY -> state.roadMode && !state.serverMode
+            Screen.REPORT -> state.report?.routeSource == "OSRM"
+            else -> state.comparison?.roadNetwork == true
+        }
+        addView(badge(if (road) "●  ROAD" else "●  MOCK", accent))
         if (wide) {
             addView(button(if (wide) "주행 이력" else "이력", enabled = state.driving == null && !state.busy) { vm.history() },
-                LinearLayout.LayoutParams(dp(if (wide) 156 else 68), dp(64)).apply { marginStart = dp(12) })
+                LinearLayout.LayoutParams(dp(if (wide) 208 else 68), dp(64)).apply { marginStart = dp(12) })
             addView(button("설정", enabled = state.driving == null && !state.busy) { settings(state) },
                 LinearLayout.LayoutParams(dp(if (wide) 126 else 68), dp(64)).apply { marginStart = dp(8) })
         }
@@ -154,13 +162,22 @@ class MainActivity : ComponentActivity() {
     private fun home(body: LinearLayout, state: AppState) {
         body.addView(text("에너지 경로 도우미", 18f, muted))
         body.addView(text("시간과 배터리를 함께 비교하세요", if (wide) 36f else 28f, white, true), margin(bottom = 12, top = 8))
+        body.addView(row().apply {
+            addView(button("실제 도로", primary = state.roadMode && !state.serverMode, enabled = !state.busy) { vm.setRoadMode(true) }
+                .apply { id = R.id.road_mode }, LinearLayout.LayoutParams(0, dp(64), 1f))
+            addView(button("오프라인 데모", primary = !state.roadMode && !state.serverMode, enabled = !state.busy) { vm.setRoadMode(false) }
+                .apply { id = R.id.demo_mode }, LinearLayout.LayoutParams(0, dp(64), 1f).apply { marginStart = dp(12) })
+        }, margin(bottom = 10))
+        body.addView(text(if (state.roadMode && !state.serverMode)
+            "OpenStreetMap 지도 · OSRM 공개 데모 서버로 출발지·목적지 좌표 전송 · 인터넷 필요"
+            else "합성 경로와 차량값으로 전체 흐름을 시연합니다.", 13f, muted), margin(bottom = 18))
         val content = if (wide) row() else column()
         val planning = card()
         planning.addView(text("어디로 떠나시나요?", 23f, white, true), margin(bottom = 18))
         planning.addView(text("출발  ●  서울 시청", 14f, muted), margin(bottom = 16))
         val input = EditText(this).apply {
             id = R.id.destination_input
-            setSingleLine(true); textSize = 18f; setTextColor(white); setHintTextColor(muted)
+            setSingleLine(true); textSize = if (wide) 22f else 18f; setTextColor(white); setHintTextColor(muted)
             hint = "목적지 검색 · 예: 강릉"
             setPadding(dp(16), dp(14), dp(16), dp(14)); background = shape(ink, 12, line)
             typeface = design.font; setText(query); contentDescription = "데모 목적지 검색"
@@ -174,7 +191,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         planning.addView(input, margin(bottom = 20))
-        planning.addView(text("추천 데모 목적지", 12f, muted, true), margin(bottom = 8))
+        planning.addView(text(if (state.roadMode && !state.serverMode) "선택할 수 있는 목적지" else "추천 데모 목적지", 12f, muted, true), margin(bottom = 8))
         vm.destinations.forEachIndexed { index, destination ->
             val item = row().apply {
                 gravity = Gravity.CENTER_VERTICAL; minimumHeight = dp(68)
@@ -204,11 +221,11 @@ class MainActivity : ComponentActivity() {
         }, margin(bottom = 16))
         vehicle.addView(divider())
         vehicle.addView(text("최소 도착 잔량 ${f(state.preferences.minArrivalSoc, 0)}%  ·  추가 시간 ${f(state.preferences.maxExtraMinutes, 0)}분 이내", 13f, muted), margin(top = 16, bottom = 8))
-        vehicle.addView(text(if (state.serverMode) "●  개발 서버로 분석 · Mock 데이터" else "●  오프라인 데모 · 서버 없이 실행", 13f, accent), margin(bottom = 4))
+        vehicle.addView(text(when { state.serverMode -> "●  개발 서버로 분석 · Mock 데이터"; state.roadMode -> "●  실제 지도·도로 경로 · 주행은 좌표 재생"; else -> "●  오프라인 데모 · 서버 없이 실행" }, 13f, accent), margin(bottom = 4))
         vehicle.addView(text(if (state.vehicle.source == DataSource.PLEOS)
             "SOC: SDK 스냅샷 · 전비: ${if (state.vehicle.efficiencySource == DataSource.PLEOS) "SDK" else "설정값"} · 용량: 설정값"
             else "차량값은 데모 설정값입니다.", 12f, muted))
-        vehicle.addView(text("경로·주행은 실제 도로가 아닌 시뮬레이션입니다.", 12f, muted), margin(top = 6))
+        vehicle.addView(text(if (state.roadMode && !state.serverMode) "소비량은 거리÷전비 추정 · 실시간 교통·고도 미반영" else "경로·주행은 실제 도로가 아닌 시뮬레이션입니다.", 12f, muted), margin(top = 6))
         vehicle.addView(button(if (state.busy) "처리 중…" else "Pleos 차량 상태 읽기", enabled = !state.busy) { vm.readPleosVehicle() }, margin(top = 16))
         addPanels(content, planning, vehicle)
         body.addView(content)
@@ -219,14 +236,16 @@ class MainActivity : ComponentActivity() {
     private fun comparison(body: LinearLayout, state: AppState) {
         val comparison = state.comparison ?: return
         body.addView(text("경로의 기준에, 에너지를 더하다.", 28f, white, true), margin(bottom = 8))
-        body.addView(text("서울 시청  →  ${comparison.destination.name}  ·  ${if (comparison.remote) "서버 분석" else "오프라인 분석"}", 15f, muted), margin(bottom = 20))
+        body.addView(text("서울 시청  →  ${comparison.destination.name}  ·  ${when { comparison.roadNetwork -> "도로 경로 ${comparison.routes.size}개"; comparison.remote -> "서버 분석"; else -> "오프라인 분석" }}", 15f, muted), margin(bottom = 20))
         val content = if (wide) row() else column()
         val visual = card()
         visual.addView(row().apply {
-            addView(text("ROUTE OVERVIEW", 11f, muted, true), LinearLayout.LayoutParams(0, -2, 1f)); addView(badge("모식도", muted))
+            addView(text("ROUTE OVERVIEW", 11f, muted, true), LinearLayout.LayoutParams(0, -2, 1f)); addView(badge(if (comparison.roadNetwork) "실제 지도" else "모식도", muted))
         })
-        visual.addView(RouteMapView(this, comparison.routes, state.selectedId), LinearLayout.LayoutParams(-1, dp(if (wide) 270 else 220)))
-        visual.addView(text("경로 좌표 기반 데모 모식도 · 실제 내비게이션 지도 아님", 12f, muted), margin(bottom = 14))
+        visual.addView(if (comparison.roadNetwork) RoadMapPanel(this, comparison.routes, state.selectedId, null, comparisonCamera, comparison.tripId, true)
+            else RouteMapView(this, comparison.routes, state.selectedId), LinearLayout.LayoutParams(-1, dp(if (comparison.roadNetwork) 340 else if (wide) 270 else 220)))
+        visual.addView(text(if (comparison.roadNetwork) "OSRM 도로 좌표·거리·시간 · 실시간 교통·고도 미반영" else "경로 좌표 기반 데모 모식도 · 실제 내비게이션 지도 아님", 12f, muted), margin(top = 8, bottom = 14))
+        if (comparison.roadNetwork && comparison.routes.size == 1) visual.addView(text("이 구간에는 제공된 경로가 1개입니다. 대안 경로는 생성하지 않았습니다.", 14f, muted), margin(bottom = 10))
         val fastest = comparison.routes.minBy { it.durationMinutes }
         val selected = comparison.routes.firstOrNull { it.id == state.selectedId }
         val saving = selected?.let { fastest.energyKwh - it.energyKwh } ?: 0.0
@@ -236,6 +255,7 @@ class MainActivity : ComponentActivity() {
         } else visual.addView(text("시간과 소비량을 비교해 경로를 선택하세요.", 16f, white))
         val choices = column()
         if (comparison.recommendedId == null) choices.addView(text("조건을 만족하는 추천 경로가 없습니다.", 18f, design.warning), margin(bottom = 10))
+        if (comparison.routes.none { it.arrivalSoc >= state.preferences.minArrivalSoc }) choices.addView(text("모든 경로가 최소 도착 잔량에 못 미칩니다. 출발 SOC·전비·용량을 확인한 뒤 다시 분석하세요.", 18f, design.warning), margin(bottom = 12))
         comparison.routes.forEach { route ->
             val safe = route.arrivalSoc >= state.preferences.minArrivalSoc
             val active = state.selectedId == route.id
@@ -269,17 +289,19 @@ class MainActivity : ComponentActivity() {
         val minutes = metrics.remainingMinutes
         val arrival = metrics.arrivalSoc
         body.addView(text("${state.comparison?.destination?.name}까지, 효율적으로.", 28f, white, true), margin(bottom = 8))
-        body.addView(text("${route.label}  ·  ${if (d.paused) "데모 일시정지" else "Mock 주행 중"}  ·  ${d.speed}× 재생", 15f, accent), margin(bottom = 20))
+        body.addView(text("${route.label}  ·  ${if (d.paused) "재생 일시정지" else if (route.source == RouteSource.OSRM) "도로 경로 재생" else "Mock 주행 중"}  ·  ${d.speed}× 재생", 15f, accent), margin(bottom = 20))
         val content = if (wide) row() else column()
         val visual = card()
-        visual.addView(RouteMapView(this, listOf(route), route.id, d.position), LinearLayout.LayoutParams(-1, dp(if (wide) 260 else 190)))
+        visual.addView(if (route.source == RouteSource.OSRM) RoadMapPanel(this, listOf(route), route.id, d.position,
+            drivingCamera, "${d.tripId}:${route.id}", false) else RouteMapView(this, listOf(route), route.id, d.position),
+            LinearLayout.LayoutParams(-1, dp(if (route.source == RouteSource.OSRM) 320 else if (wide) 260 else 190)))
         visual.addView(text("${f(d.distanceKm)} / ${f(route.distanceKm)} km", 14f, muted), margin(top = 8, bottom = 12))
         visual.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 1000; progress = (d.distanceKm / route.distanceKm * 1000).toInt()
             progressTintList = ColorStateList.valueOf(accent); progressBackgroundTintList = ColorStateList.valueOf(line)
             contentDescription = "주행 진행률"
         }, LinearLayout.LayoutParams(-1, dp(6)))
-        visual.addView(text("좌표 순차 재생 · 위치 정확도 5 m (Mock)", 12f, muted), margin(top = 14))
+        visual.addView(text(if (route.source == RouteSource.OSRM) "실제 도로 좌표 재생 · GPS 추적 아님 · 구간 시간 보간" else "좌표 순차 재생 · 위치 정확도 5 m (Mock)", 12f, muted), margin(top = 14))
         val info = card()
         info.addView(text("남은 여정", 13f, muted, true), margin(bottom = 12))
         info.addView(text("${f(minutes, 0)}분", 48f, white, true), margin(bottom = 8))
@@ -313,7 +335,7 @@ class MainActivity : ComponentActivity() {
     private fun report(body: LinearLayout, state: AppState) {
         val report = state.report ?: return
         body.addView(text("여정은 끝나도, 에너지는 남도록.", 28f, white, true), margin(bottom = 8))
-        body.addView(text("${report.destination} 도착 · ${report.routeLabel} · MOCK 리포트", 15f, muted), margin(bottom = 24))
+        body.addView(text("${report.destination} 도착 · ${report.routeLabel} · ${if (report.routeSource == "OSRM") "도로 경로 재생" else "MOCK 리포트"}", 15f, muted), margin(bottom = 24))
         val summary = card()
         summary.addView(text("SIMULATED TRIP", 11f, accent, true), margin(bottom = 12))
         summary.addView(text("${f(report.simulatedEnergyKwh)} kWh", 44f, accent, true), margin(bottom = 8))
@@ -356,7 +378,7 @@ class MainActivity : ComponentActivity() {
                     addView(text(record.destination, 21f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
                     addView(text("${f(record.simulatedEnergyKwh)} kWh  ↗", 22f, accent, true))
                 }, margin(bottom = 8))
-                addView(text("${SimpleDateFormat("MM.dd HH:mm", Locale.KOREA).format(Date(record.endedAt))}  ·  ${record.routeLabel}  ·  ${f(record.distanceKm)} km  ·  MOCK", 13f, muted))
+                addView(text("${SimpleDateFormat("MM.dd HH:mm", Locale.KOREA).format(Date(record.endedAt))}  ·  ${record.routeLabel}  ·  ${f(record.distanceKm)} km  ·  ${if (record.routeSource == "OSRM") "도로 재생" else "MOCK"}", 13f, muted))
                 isClickable = true; isFocusable = true; setOnClickListener { vm.openReport(record) }
             }, margin(bottom = 12))
         }
@@ -373,7 +395,8 @@ class MainActivity : ComponentActivity() {
             return EditText(this).apply {
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 setSingleLine(true); setText(f(value)); setTextColor(white); setSelectAllOnFocus(true)
-                fields.addView(this, LinearLayout.LayoutParams(-1, dp(52)))
+                textSize = if (wide) 22f else 18f; typeface = design.font
+                fields.addView(this, LinearLayout.LayoutParams(-1, dp(if (wide) 64 else 52)))
             }
         }
         val soc = field("출발 배터리 SOC (0–100%)", state.vehicle.socPercent)
@@ -381,10 +404,10 @@ class MainActivity : ComponentActivity() {
         val capacity = field("사용 가능 배터리 용량 (0 초과, kWh)", state.vehicle.usableBatteryCapacityKwh)
         val minimum = field("최소 도착 잔량 (0–100%)", state.preferences.minArrivalSoc)
         val extra = field("허용 추가 시간 (0–120분)", state.preferences.maxExtraMinutes)
-        val server = SwitchCompat(this).apply { text = "개발 서버 사용 (10.0.2.2:8000)"; setTextColor(white); isChecked = state.serverMode; minimumHeight = dp(64) }
+        val server = SwitchCompat(this).apply { text = "개발 서버 사용 (10.0.2.2:8000)"; setTextColor(white); isChecked = state.serverMode; minimumHeight = dp(64); textSize = if (wide) 22f else 18f; typeface = design.font }
         val developerBuild = applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         server.isEnabled = developerBuild
-        val failure = SwitchCompat(this).apply { text = "경로 변경 실패 시나리오"; setTextColor(white); isChecked = state.failRouteChange; minimumHeight = dp(64) }
+        val failure = SwitchCompat(this).apply { text = "경로 변경 실패 시나리오"; setTextColor(white); isChecked = state.failRouteChange; minimumHeight = dp(64); textSize = if (wide) 22f else 18f; typeface = design.font }
         fields.addView(server, margin(top = 12)); fields.addView(failure)
         fields.addView(button("서버 연결 확인", enabled = developerBuild) { withServerAccess { vm.checkServer() } })
         fields.addView(text("모든 주행은 시뮬레이션입니다. Pleos 실차 연결과 음성 안내는 SDK·정책 검증 전 비활성화됩니다.", 13f, muted), margin(top = 12))
@@ -403,6 +426,10 @@ class MainActivity : ComponentActivity() {
             }
         }
         dialog.show()
+        if (wide) {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).textSize = 22f
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).textSize = 22f
+        }
     }
     private fun confirmStop() {
         AlertDialog.Builder(this).setTitle("Mock 주행을 취소할까요?").setMessage("진행 중인 시뮬레이션을 종료합니다.")
@@ -420,7 +447,7 @@ class MainActivity : ComponentActivity() {
     private fun column() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
     private fun text(value: String, size: Float, color: Int = white, bold: Boolean = false) = TextView(this).apply {
-        text = value; textSize = size.coerceAtLeast(18f); setTextColor(color); includeFontPadding = false
+        text = value; textSize = size.coerceAtLeast(if (wide) 22f else 18f); setTextColor(color); includeFontPadding = false
         typeface = if (bold) design.boldFont else design.font
     }
     private fun shape(color: Int, radius: Int, stroke: Int? = null) = GradientDrawable().apply {
@@ -436,7 +463,7 @@ class MainActivity : ComponentActivity() {
     private fun divider() = View(this).apply { setBackgroundColor(line); layoutParams = LinearLayout.LayoutParams(-1, dp(1)) }
     private fun margin(top: Int = 0, bottom: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top); bottomMargin = dp(bottom) }
     private fun button(value: String, primary: Boolean = false, enabled: Boolean = true, action: () -> Unit) = Button(this).apply {
-        text = value; textSize = if (wide) 22f else 18f; typeface = design.boldFont; isAllCaps = false
+        text = value; textSize = if (wide) 24f else 18f; typeface = design.boldFont; isAllCaps = false
         minHeight = dp(64); minimumHeight = dp(64)
         setTextColor(if (primary) design.onFilled else white)
         background = RippleDrawable(ColorStateList.valueOf(design.ripple), shape(if (primary) design.filledButton else design.button, 12), null)

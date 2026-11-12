@@ -63,6 +63,7 @@ command("shell", "am", "start", "-n", f"{package}/{package}.MainActivity")
 time.sleep(2)
 assert any(node.get("text") == "VOLTRO" for node in dump().iter("node")), "Release did not reach Home"
 checkpoint("home")
+tap("resource-id", f"{package}:id/demo_mode")
 tap("text", "Pleos 차량 상태 읽기")
 time.sleep(8)
 tree = dump()

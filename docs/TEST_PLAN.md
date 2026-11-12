@@ -19,7 +19,7 @@
 ## 확인된 결과
 
 - Python: **26 tests passed**.
-- Android JVM: **8 tests passed**.
+- Android JVM: **14 tests passed** (기존 8개와 실도로 geometry·거리·시간·좌표 검증 6개).
 - Android API 37: **5 instrumented tests passed** (Mock 3, 디자인 1, Backend 1).
 - Pleos Connect 2.1.0: **Vehicle SDK 직접 읽기 통합 테스트 1개 통과**, Vehicle Service 2.3.22. `PleosVehicleIntegrationTest`는 일반 Android의 기본 테스트 모음과 분리한다.
 - `assembleDebug`, `testDebugUnitTest`, `lintDebug` 성공. lint error 0. SDK 업데이트 권장·View draw 할당·다국어 리소스 등 warning은 남아 있다.
@@ -27,6 +27,8 @@
 - Pleos Connect 2.1.0: 기본 앱 실행, 차량 Mock/API 상태 표시, Home/경로 비교/분기점 화면을 직접 확인했다. 5개 연속 테스트 중 4개(미지원 전환, SOC, 대비, Backend 왕복)는 통과했으며 UI 전체 여정 테스트는 시스템 focus/lifecycle 문제로 실패했다. 전체 5개 통과로 집계하지 않는다.
 
 ## 수동 시연
+
+아래 고정 수치 시나리오는 Home에서 **오프라인 데모**를 선택한 경우다. 실제 도로 모드의 거리·시간·경로 개수는 공급자 응답에 따라 달라진다.
 
 1. 기본 강릉 예측: 180/174/165 km, 130/137/145분, 약 34.6/33.5/31.7 kWh.
 2. 빠른 경로로 시작: 33.8 km 위치(분기점 1.2 km 전)에서 약 2.9 kWh / 15분 안내. 같은 출발점 이후의 소비량을 비교한다.

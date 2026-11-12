@@ -54,6 +54,14 @@ object JunctionAnalyzer {
 
 /** Shared synthetic prefix takes 25 minutes for every route; suffix times remain comparable. */
 fun RouteCandidate.minutesAt(distance: Double): Double {
+    if (source == RouteSource.OSRM) {
+        val km = distance.coerceIn(0.0, distanceKm)
+        val index = nodes.binarySearch { it.distanceKm.compareTo(km) }
+        if (index >= 0) return nodes[index].elapsedMinutes!!
+        val next = (-index - 1).coerceIn(1, nodes.lastIndex)
+        val a = nodes[next - 1]; val b = nodes[next]
+        return a.elapsedMinutes!! + (b.elapsedMinutes!! - a.elapsedMinutes) * (km - a.distanceKm) / (b.distanceKm - a.distanceKm)
+    }
     val split = nodes.getOrNull(2)?.distanceKm ?: return durationMinutes * distance / distanceKm
     val prefixMinutes = min(25.0, durationMinutes / 2)
     return if (distance <= split) prefixMinutes * distance / split

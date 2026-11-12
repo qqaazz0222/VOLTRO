@@ -2,4 +2,6 @@
     <item name="destination_input" type="id" />
     <item name="analyze_routes" type="id" />
     <item name="start_trip" type="id" />
+    <item name="road_mode" type="id" />
+    <item name="demo_mode" type="id" />
 </resources>

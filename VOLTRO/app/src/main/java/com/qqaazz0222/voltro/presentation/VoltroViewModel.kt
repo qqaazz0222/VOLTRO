@@ -7,6 +7,8 @@ import com.qqaazz0222.voltro.data.local.TripStore
 import com.qqaazz0222.voltro.data.mock.*
 import com.qqaazz0222.voltro.data.remote.*
 import com.qqaazz0222.voltro.data.pleos.PleosVehicleRepository
+import com.qqaazz0222.voltro.data.road.OsrmRouteRepository
+import com.qqaazz0222.voltro.R
 import com.qqaazz0222.voltro.domain.model.*
 import com.qqaazz0222.voltro.domain.repository.RouteChangeResult
 import com.qqaazz0222.voltro.domain.usecase.*
@@ -18,7 +20,7 @@ import kotlin.math.*
 enum class Screen { HOME, COMPARISON, DRIVING, REPORT, HISTORY }
 data class AppState(
     val screen: Screen = Screen.HOME, val vehicle: VehicleEnergyState = VehicleEnergyState(),
-    val preferences: Preferences = Preferences(), val serverMode: Boolean = false,
+    val preferences: Preferences = Preferences(), val serverMode: Boolean = false, val roadMode: Boolean = true,
     val busy: Boolean = false, val error: String? = null, val message: String? = null,
     val destination: Destination? = null, val comparison: RouteComparison? = null,
     val selectedId: String? = null, val driving: DrivingState? = null,
@@ -33,6 +35,7 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
     private val local = MockRouteRepository(JSONObject(application.assets.open("scenario.json").bufferedReader().use { it.readText() }))
     private val client = BackendClient()
     private val remote = RemoteRouteRepository(client, local.origin)
+    private val road = OsrmRouteRepository(local.origin, application.getString(R.string.routing_base_url))
     private val navigation = MockNavigationRepository()
     private val store = TripStore(application)
     private val mutable = MutableStateFlow(AppState(
@@ -40,12 +43,14 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
             storedNumber("capacity", 70.0), source = if (settings.getBoolean("manualVehicle", false)) DataSource.USER_INPUT else DataSource.MOCK),
         preferences = Preferences(storedNumber("minSoc", 15.0), storedNumber("extra", 15.0)),
         serverMode = developerBuild && settings.getBoolean("server", false),
+        roadMode = settings.getBoolean("roadMode", true),
     ))
     val state = mutable.asStateFlow()
     val destinations = local.destinations
     val origin = local.origin
     private var ticker: Job? = null
     private val notified = mutableSetOf<String>()
+    private val processedJunctions = mutableSetOf<String>()
     private var lastQuery = ""
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         mutable.update { it.copy(busy = false, error = "처리하지 못했습니다. ${throwable.message.orEmpty()}") }
@@ -67,7 +72,7 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val snapshot = PleosVehicleRepository(getApplication(), state.value.vehicle).getVehicleEnergyState()
                 mutable.update { it.copy(vehicle = snapshot, comparison = null, selectedId = null, busy = false,
-                    message = "Pleos SOC를 불러왔습니다. 용량은 설정값이며 경로·주행은 데모입니다.") }
+                    message = "Pleos SOC를 불러왔습니다. 용량은 설정값이며 주행은 재생 모드입니다.") }
             } catch (cancelled: CancellationException) {
                 if (cancelled is TimeoutCancellationException) mutable.update { it.copy(busy = false, message = null,
                     error = "Pleos 응답 시간이 초과되었습니다. 기존 차량값을 유지합니다.") }
@@ -79,6 +84,12 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
     fun clearNotice() { mutable.update { it.copy(error = null, message = null) } }
+    fun setRoadMode(enabled: Boolean) {
+        if (state.value.busy || state.value.driving != null) return
+        settings.edit().putBoolean("roadMode", enabled).putBoolean("server", false).apply()
+        mutable.update { it.copy(roadMode = enabled, serverMode = false, comparison = null, selectedId = null,
+            error = null, message = null) }
+    }
     fun serverPermissionDenied() {
         mutable.update { it.copy(error = "개발 서버 연결에는 로컬 네트워크 권한이 필요합니다. 오프라인 데모도 사용할 수 있습니다.") }
     }
@@ -95,13 +106,16 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch(exceptionHandler) {
             val snapshot = state.value
             try {
-                val result = (if (snapshot.serverMode) remote else local).compare(destination, snapshot.vehicle, snapshot.preferences)
+                val repository = when { snapshot.serverMode -> remote; snapshot.roadMode -> road; else -> local }
+                val result = repository.compare(destination, snapshot.vehicle, snapshot.preferences)
                 mutable.update { it.copy(busy = false, destination = destination, comparison = result,
                     selectedId = result.recommendedId ?: result.routes.firstOrNull { r -> r.arrivalSoc >= snapshot.preferences.minArrivalSoc }?.id,
                     screen = Screen.COMPARISON) }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) {
-                mutable.update { it.copy(busy = false, error = "서버에 연결하지 못했거나 경로 응답이 유효하지 않습니다. 기존 분석을 유지했습니다. 서버를 확인한 뒤 다시 시도하세요.") }
+                mutable.update { it.copy(busy = false, error = if (snapshot.roadMode && !snapshot.serverMode)
+                    "실제 도로 경로를 가져오지 못했습니다. 기존 분석을 유지했습니다. 인터넷 연결을 확인하거나 오프라인 데모를 선택하세요."
+                    else "서버에 연결하지 못했거나 경로 응답이 유효하지 않습니다. 기존 분석을 유지했습니다. 서버를 확인한 뒤 다시 시도하세요.") }
             }
         }
     }
@@ -113,7 +127,7 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         mutable.update { it.copy(selectedId = id, error = null) }
     }
     fun configure(minSoc: Double, maxExtra: Double, soc: Double, efficiency: Double, capacity: Double,
-                  server: Boolean, failChange: Boolean) {
+                  server: Boolean, failChange: Boolean, roadMode: Boolean = state.value.roadMode) {
         if (state.value.driving != null || state.value.busy) return
         require(!server || developerBuild) { "개발 서버는 debug 빌드에서만 사용할 수 있습니다." }
         val preferences = Preferences(minSoc, maxExtra)
@@ -121,9 +135,10 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val vehicle = VehicleEnergyState(soc, efficiency, capacity, source = source)
         settings.edit().putString("minSoc", minSoc.toString()).putString("extra", maxExtra.toString())
             .putBoolean("server", server).putString("soc", soc.toString()).putString("efficiency", efficiency.toString())
-            .putString("capacity", capacity.toString()).putBoolean("manualVehicle", source == DataSource.USER_INPUT).apply()
+            .putString("capacity", capacity.toString()).putBoolean("manualVehicle", source == DataSource.USER_INPUT)
+            .putBoolean("roadMode", roadMode).apply()
         navigation.simulateChangeFailure = failChange
-        mutable.update { it.copy(screen = Screen.HOME, preferences = preferences, vehicle = vehicle, serverMode = server,
+        mutable.update { it.copy(screen = Screen.HOME, preferences = preferences, vehicle = vehicle, serverMode = server, roadMode = roadMode,
             comparison = null, selectedId = null, failRouteChange = failChange, error = null, message = "설정을 적용했습니다.") }
     }
     fun checkServer() {
@@ -167,6 +182,7 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val route = comparison.routes.firstOrNull { it.id == state.selectedId } ?: return
         if (route.arrivalSoc < state.preferences.minArrivalSoc) return
         notified.clear()
+        processedJunctions.clear()
         mutable.update { it.copy(screen = Screen.DRIVING, error = null, message = null,
             driving = DrivingState(comparison.tripId, route, route)) }
         ticker?.cancel()
@@ -186,17 +202,24 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val step = route.distanceKm / 120 * driving.speed * .5
         var distance = min(route.distanceKm, driving.distanceKm + step)
         val junction = snapshot.comparison?.routes?.filter { it.id != route.id }
-            ?.mapNotNull { JunctionAnalyzer.divergence(route, it) }?.firstOrNull()
+            ?.mapNotNull { JunctionAnalyzer.divergence(route, it) }
+            ?.filter { "${route.id}:${it.node.id}" !in processedJunctions && it.node.distanceKm > driving.distanceKm }
+            ?.minByOrNull { it.node.distanceKm }
         // Stop exactly in the approach window even at 12×; do not skip a decision frame.
-        if (!driving.junctionChecked && junction != null && driving.distanceKm < junction.node.distanceKm - 1.2 &&
-            distance >= junction.node.distanceKm - 1.2) distance = junction.node.distanceKm - 1.2
+        if (junction != null) {
+            val approach = max(0.0, junction.node.distanceKm - 1.2)
+            if (driving.distanceKm <= approach && distance >= approach) distance = approach
+        }
         val energy = EnergyEngine.predict(distance - driving.distanceKm, snapshot.vehicle.efficiencyKmPerKwh)
         val next = driving.copy(distanceKm = distance, consumedKwh = driving.consumedKwh + energy,
             elapsedMinutes = driving.elapsedMinutes + route.minutesAt(distance) - route.minutesAt(driving.distanceKm),
             position = route.pointAt(distance), advice = if (junction != null && distance >= junction.node.distanceKm) null else driving.advice)
         mutable.update { it.copy(driving = next) }
         if (distance >= route.distanceKm) { finishTrip(); return }
-        if (!next.junctionChecked && junction != null && distance >= junction.node.distanceKm - 1.5) evaluateJunction(next)
+        if (junction != null && distance >= junction.node.distanceKm - 1.5) {
+            processedJunctions.add("${route.id}:${junction.node.id}")
+            evaluateJunction(next)
+        }
     }
 
     private suspend fun evaluateJunction(driving: DrivingState) {
@@ -244,9 +267,12 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         mutable.update { it.copy(busy = true, error = null) }
         viewModelScope.launch(exceptionHandler) {
             when (val result = navigation.requestRouteChange(advice.alternative)) {
-                RouteChangeResult.Changed -> mutable.update { it.copy(busy = false, message = "Mock 경로를 변경했습니다.",
-                    driving = it.driving?.copy(activeRoute = advice.alternative, advice = null, paused = false,
-                        routeChanged = true, junctionChecked = false)) }
+                RouteChangeResult.Changed -> mutable.update { it.copy(busy = false, message = "재생 경로를 변경했습니다.",
+                    driving = it.driving?.let { d ->
+                        val along = if (advice.alternative.source == RouteSource.OSRM) JunctionAnalyzer.match(advice.alternative, d.position).first else d.distanceKm
+                        d.copy(activeRoute = advice.alternative, distanceKm = along, position = advice.alternative.pointAt(along),
+                            advice = null, paused = false, routeChanged = true, junctionChecked = false)
+                    }) }
                 is RouteChangeResult.Unsupported -> mutable.update { it.copy(busy = false, error = result.reason,
                     driving = it.driving?.copy(advice = null, paused = false)) }
             }
@@ -269,7 +295,7 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val report = TripRecord(driving.tripId, comparison.destination.name, driving.activeRoute.label,
             driving.startedAt, System.currentTimeMillis(), driving.distanceKm, driving.elapsedMinutes,
             driving.initialRoute.energyKwh, driving.consumedKwh, snapshot.vehicle.socPercent, finalSoc,
-            remote = comparison.remote)
+            remote = comparison.remote, routeSource = if (comparison.roadNetwork) "OSRM" else "MOCK")
         mutable.update { it.copy(busy = true, driving = null, screen = Screen.REPORT, report = report, error = null, message = null) }
         try {
             withContext(Dispatchers.IO) { store.save(report) }

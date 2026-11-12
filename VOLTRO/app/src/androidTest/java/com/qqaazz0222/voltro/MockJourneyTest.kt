@@ -30,7 +30,7 @@ class MockJourneyTest {
             lateinit var vm: VoltroViewModel
             scenario.onActivity {
                 vm = ViewModelProvider(it)[VoltroViewModel::class.java]
-                vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false)
+                vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false, roadMode = false)
                 vm.selectDestination(vm.destinations.first())
             }
             onView(withId(R.id.analyze_routes)).perform(click())
@@ -66,7 +66,7 @@ class MockJourneyTest {
             lateinit var vm: VoltroViewModel
             scenario.onActivity {
                 vm = ViewModelProvider(it)[VoltroViewModel::class.java]
-                vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, true)
+                vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, true, roadMode = false)
                 vm.selectDestination(vm.destinations.first()); vm.analyze("강릉역")
             }
             await { vm.state.value.screen == Screen.COMPARISON }
@@ -90,14 +90,14 @@ class MockJourneyTest {
             lateinit var vm: VoltroViewModel
             scenario.onActivity {
                 vm = ViewModelProvider(it)[VoltroViewModel::class.java]
-                vm.configure(15.0, 15.0, 20.0, 5.2, 70.0, false, false)
+                vm.configure(15.0, 15.0, 20.0, 5.2, 70.0, false, false, roadMode = false)
                 vm.selectDestination(vm.destinations.first()); vm.analyze("강릉역")
             }
             await { vm.state.value.screen == Screen.COMPARISON }
             assertNull(vm.state.value.comparison!!.recommendedId)
             assertNull(vm.state.value.selectedId)
             onView(withId(R.id.start_trip)).check(matches(isNotEnabled()))
-            scenario.onActivity { vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false) }
+            scenario.onActivity { vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false, roadMode = false) }
             assertEquals(Screen.HOME, vm.state.value.screen)
             assertNull(vm.state.value.comparison)
         }

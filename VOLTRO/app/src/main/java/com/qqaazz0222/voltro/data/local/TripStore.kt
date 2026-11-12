@@ -30,9 +30,9 @@ class TripStore(context: Context) : SQLiteOpenHelper(context, "voltro.db", null,
 fun TripRecord.json() = JSONObject().put("id", id).put("destination", destination).put("routeLabel", routeLabel)
     .put("startedAt", startedAt).put("endedAt", endedAt).put("distanceKm", distanceKm).put("durationMinutes", durationMinutes)
     .put("estimatedEnergyKwh", estimatedEnergyKwh).put("simulatedEnergyKwh", simulatedEnergyKwh)
-    .put("initialSoc", initialSoc).put("finalSoc", finalSoc).put("remote", remote).put("synced", synced)
+    .put("initialSoc", initialSoc).put("finalSoc", finalSoc).put("remote", remote).put("synced", synced).put("routeSource", routeSource)
 
 private fun JSONObject.record() = TripRecord(getString("id"), getString("destination"), getString("routeLabel"),
     getLong("startedAt"), getLong("endedAt"), getDouble("distanceKm"), getDouble("durationMinutes"),
     getDouble("estimatedEnergyKwh"), getDouble("simulatedEnergyKwh"), getDouble("initialSoc"), getDouble("finalSoc"),
-    optBoolean("remote"), optBoolean("synced"))
+    optBoolean("remote"), optBoolean("synced"), optString("routeSource", "MOCK"))
