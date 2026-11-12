@@ -1,0 +1,24 @@
+{
+  "version": "seoul-east-coast-1",
+  "provider": "VOLTRO synthetic demo",
+  "origin": {"latitude": 37.5665, "longitude": 126.9780},
+  "vehicle": {"soc_percent": 68.0, "efficiency_km_per_kwh": 5.2, "usable_capacity_kwh": 70.0},
+  "common_nodes": [
+    {"node_id": "seoul", "latitude": 37.5665, "longitude": 126.9780, "distance_km": 0.0},
+    {"node_id": "hanam", "latitude": 37.60, "longitude": 127.10, "distance_km": 15.0},
+    {"node_id": "junction-east", "latitude": 37.65, "longitude": 127.40, "distance_km": 35.0}
+  ],
+  "destinations": [
+    {"id": "gangneung", "name": "강릉역", "description": "강원 강릉시 · 동해안으로 떠나는 길", "latitude": 37.7644, "longitude": 128.8995, "distance_scale": 1.0},
+    {"id": "sokcho", "name": "속초해수욕장", "description": "강원 속초시 · 바다와 함께하는 여정", "latitude": 38.1905, "longitude": 128.6008, "distance_scale": 1.12},
+    {"id": "yangyang", "name": "양양 서피비치", "description": "강원 양양군 · 잠깐의 휴식", "latitude": 38.0234, "longitude": 128.7307, "distance_scale": 0.96}
+  ],
+  "routes": [
+    {"route_type": "FASTEST", "label": "빠른 경로", "road_name": "고속도로 중심", "distance_km": 180.0, "eta_minutes": 130.0,
+      "via": [{"latitude": 37.48, "longitude": 127.95}, {"latitude": 37.55, "longitude": 128.50}]},
+    {"route_type": "BALANCED", "label": "균형 경로", "road_name": "시간과 에너지의 균형", "distance_km": 174.0, "eta_minutes": 137.0,
+      "via": [{"latitude": 37.72, "longitude": 127.97}, {"latitude": 37.68, "longitude": 128.45}]},
+    {"route_type": "ECO", "label": "절전 경로", "road_name": "짧은 거리 중심", "distance_km": 165.0, "eta_minutes": 145.0,
+      "via": [{"latitude": 37.95, "longitude": 127.95}, {"latitude": 37.91, "longitude": 128.45}]}
+  ]
+}

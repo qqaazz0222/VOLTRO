@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.qqaazz0222.voltro"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -30,6 +30,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    sourceSets.getByName("main").assets.srcDir("../../mock-data")
 }
 
 dependencies {
