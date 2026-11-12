@@ -51,3 +51,12 @@
 - Android API 37 에뮬레이터에서 5개 instrumented test 통과: 전체 Mock 여정/승인 전환/화면 재생성/DB 저장, 미지원 전환 유지, SOC 부족 차단, 주야간 대비, 실제 개발 서버와 경로·분기점·완료 API 왕복.
 - `assembleDebug`, Kotlin 단위 테스트, `lintDebug` 성공. lint 오류 0, 권장 사항 warning은 남아 있다.
 - Pleos 2.1.0 화면에서 Home/경로 비교/분기점 화면을 확인했다. Gradle connected test가 instrumentation crash에도 성공으로 끝나는 환경 문제가 있어 실제 runner의 테스트 개수와 OK 출력을 검증하는 `scripts/check_android.py`를 추가했다.
+
+## 최종 안정화
+
+- 개발 서버 기능은 debug에만 허용하며 Release에서는 설정을 비활성화한다. Android 17 로컬 네트워크 권한은 실제 API 테스트에서 확인했다.
+- 차량 입력과 선호값을 기기에 저장한다. 전비 소수점 정밀도를 보존하기 위해 문자열로 저장하고 기존 Float 저장값도 읽을 수 있다.
+- 주행 표시 계산은 domain usecase로 분리했다. 서버의 계산 시각·모델·목적지·에너지 수학 일관성을 검증한 후 화면에 반영한다.
+- Pleos에서 5개 연속 테스트 중 4개가 통과했다. UI 전체 여정 테스트는 CarSystemUI/DrivingView의 focus·Activity lifecycle 영향을 받아 실패했다. 별도 UI 테스트에서도 FASTEST 탭이 반영되지 않는 현상을 재현했고 당시 `mCurrentFocus`가 DrivingView인 것을 확인했다. 이를 정상 통과로 처리하지 않는다. 일반 Android API 37에서는 전체 5개가 통과한다.
+- 외부 도로 경로·실차 SDK·TTS·실차 UX 인증은 여전히 미연동/미검증이다. 전체 production MVP 완료로 선언하지 않는다.
+- 주야간 테마를 Pleos 에뮬레이터에서 시각 확인했으며 테스트 후 주간 모드로 복원했다. 설정 변경은 기존 분석을 무효화하고 Home으로 돌아오도록 처리해 빈 비교 화면을 방지한다.

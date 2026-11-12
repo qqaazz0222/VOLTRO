@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.models import EnergyRequest, CompareRequest, JunctionRequest, CompleteRequest
 from app.junctions import evaluate
 from app.trips import complete_trip
@@ -16,7 +17,7 @@ sessions: dict = {}
 session_lock = RLock()
 
 
-@app.exception_handler(HTTPException)
+@app.exception_handler(StarletteHTTPException)
 async def http_error(_request, exc):
     return JSONResponse(status_code=exc.status_code, content={"error": {
         "code": {404: "NOT_FOUND", 409: "INVALID_STATE", 422: "INVALID_INPUT", 429: "RATE_LIMITED"}.get(exc.status_code, "REQUEST_FAILED"),

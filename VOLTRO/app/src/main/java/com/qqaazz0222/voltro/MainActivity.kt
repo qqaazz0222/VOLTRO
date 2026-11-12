@@ -28,8 +28,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.qqaazz0222.voltro.domain.model.*
-import com.qqaazz0222.voltro.domain.usecase.EnergyEngine
-import com.qqaazz0222.voltro.domain.usecase.minutesAt
+import com.qqaazz0222.voltro.domain.usecase.metrics
 import com.qqaazz0222.voltro.presentation.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -260,11 +259,11 @@ class MainActivity : ComponentActivity() {
     private fun driving(body: LinearLayout, state: AppState) {
         val d = state.driving ?: return
         val route = d.activeRoute
-        val soc = EnergyEngine.arrivalSoc(state.vehicle.socPercent, state.vehicle.usableBatteryCapacityKwh, d.consumedKwh)
-        val remaining = (route.distanceKm - d.distanceKm).coerceAtLeast(0.0)
-        val minutes = (route.durationMinutes - route.minutesAt(d.distanceKm)).coerceAtLeast(0.0)
-        val arrival = EnergyEngine.arrivalSoc(soc.coerceIn(0.0, 100.0), state.vehicle.usableBatteryCapacityKwh,
-            EnergyEngine.predict(remaining, state.vehicle.efficiencyKmPerKwh))
+        val metrics = d.metrics(state.vehicle)
+        val soc = metrics.currentSoc
+        val remaining = metrics.remainingKm
+        val minutes = metrics.remainingMinutes
+        val arrival = metrics.arrivalSoc
         body.addView(text("${state.comparison?.destination?.name}까지, 효율적으로.", 28f, white, true), margin(bottom = 8))
         body.addView(text("${route.label}  ·  ${if (d.paused) "데모 일시정지" else "Mock 주행 중"}  ·  ${d.speed}× 재생", 15f, accent), margin(bottom = 20))
         val content = if (wide) row() else column()
@@ -379,15 +378,18 @@ class MainActivity : ComponentActivity() {
         val minimum = field("최소 도착 잔량 (0–100%)", state.preferences.minArrivalSoc)
         val extra = field("허용 추가 시간 (0–120분)", state.preferences.maxExtraMinutes)
         val server = SwitchCompat(this).apply { text = "개발 서버 사용 (10.0.2.2:8000)"; setTextColor(white); isChecked = state.serverMode; minimumHeight = dp(64) }
+        val developerBuild = applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+        server.isEnabled = developerBuild
         val failure = SwitchCompat(this).apply { text = "경로 변경 실패 시나리오"; setTextColor(white); isChecked = state.failRouteChange; minimumHeight = dp(64) }
         fields.addView(server, margin(top = 12)); fields.addView(failure)
-        fields.addView(button("서버 연결 확인") { withServerAccess { vm.checkServer() } })
+        fields.addView(button("서버 연결 확인", enabled = developerBuild) { withServerAccess { vm.checkServer() } })
         fields.addView(text("모든 주행은 시뮬레이션입니다. Pleos 실차 연결과 음성 안내는 SDK·정책 검증 전 비활성화됩니다.", 13f, muted), margin(top = 12))
         val error = text("", 18f, design.warning); fields.addView(error, margin(top = 12))
         val dialog = AlertDialog.Builder(this).setTitle("에너지 & 데모 설정")
             .setView(ScrollView(this).apply { addView(fields) }).setNegativeButton("취소", null).setPositiveButton("적용", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (vm.state.value.busy) { error.text = "서버 확인이 끝난 뒤 적용하세요."; return@setOnClickListener }
                 try {
                     val s = soc.text.toString().toDouble(); val e = efficiency.text.toString().toDouble(); val c = capacity.text.toString().toDouble()
                     require(e <= 30 && c <= 300)

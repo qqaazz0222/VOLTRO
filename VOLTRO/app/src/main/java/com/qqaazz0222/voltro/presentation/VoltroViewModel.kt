@@ -26,17 +26,19 @@ data class AppState(
 )
 
 class VoltroViewModel(application: Application) : AndroidViewModel(application) {
+    private val developerBuild = application.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
     private val settings = application.getSharedPreferences("voltro", 0)
+    private fun storedNumber(key: String, fallback: Double) = settings.all[key]?.toString()?.toDoubleOrNull() ?: fallback
     private val local = MockRouteRepository(JSONObject(application.assets.open("scenario.json").bufferedReader().use { it.readText() }))
     private val client = BackendClient()
     private val remote = RemoteRouteRepository(client, local.origin)
     private val navigation = MockNavigationRepository()
     private val store = TripStore(application)
     private val mutable = MutableStateFlow(AppState(
-        vehicle = VehicleEnergyState(settings.getFloat("soc", 68f).toDouble(), settings.getFloat("efficiency", 5.2f).toDouble(),
-            settings.getFloat("capacity", 70f).toDouble(), source = if (settings.getBoolean("manualVehicle", false)) DataSource.USER_INPUT else DataSource.MOCK),
-        preferences = Preferences(settings.getFloat("minSoc", 15f).toDouble(), settings.getFloat("extra", 15f).toDouble()),
-        serverMode = settings.getBoolean("server", false),
+        vehicle = VehicleEnergyState(storedNumber("soc", 68.0), storedNumber("efficiency", 5.2),
+            storedNumber("capacity", 70.0), source = if (settings.getBoolean("manualVehicle", false)) DataSource.USER_INPUT else DataSource.MOCK),
+        preferences = Preferences(storedNumber("minSoc", 15.0), storedNumber("extra", 15.0)),
+        serverMode = developerBuild && settings.getBoolean("server", false),
     ))
     val state = mutable.asStateFlow()
     val destinations = local.destinations
@@ -94,14 +96,15 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
     fun configure(minSoc: Double, maxExtra: Double, soc: Double, efficiency: Double, capacity: Double,
                   server: Boolean, failChange: Boolean) {
         if (state.value.driving != null || state.value.busy) return
+        require(!server || developerBuild) { "개발 서버는 debug 빌드에서만 사용할 수 있습니다." }
         val preferences = Preferences(minSoc, maxExtra)
         val source = if (soc == 68.0 && efficiency == 5.2 && capacity == 70.0) DataSource.MOCK else DataSource.USER_INPUT
         val vehicle = VehicleEnergyState(soc, efficiency, capacity, source = source)
-        settings.edit().putFloat("minSoc", minSoc.toFloat()).putFloat("extra", maxExtra.toFloat())
-            .putBoolean("server", server).putFloat("soc", soc.toFloat()).putFloat("efficiency", efficiency.toFloat())
-            .putFloat("capacity", capacity.toFloat()).putBoolean("manualVehicle", source == DataSource.USER_INPUT).apply()
+        settings.edit().putString("minSoc", minSoc.toString()).putString("extra", maxExtra.toString())
+            .putBoolean("server", server).putString("soc", soc.toString()).putString("efficiency", efficiency.toString())
+            .putString("capacity", capacity.toString()).putBoolean("manualVehicle", source == DataSource.USER_INPUT).apply()
         navigation.simulateChangeFailure = failChange
-        mutable.update { it.copy(preferences = preferences, vehicle = vehicle, serverMode = server,
+        mutable.update { it.copy(screen = Screen.HOME, preferences = preferences, vehicle = vehicle, serverMode = server,
             comparison = null, selectedId = null, failRouteChange = failChange, error = null, message = "설정을 적용했습니다.") }
     }
     fun checkServer() {

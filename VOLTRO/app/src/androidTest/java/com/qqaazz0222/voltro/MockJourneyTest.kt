@@ -97,6 +97,9 @@ class MockJourneyTest {
             assertNull(vm.state.value.comparison!!.recommendedId)
             assertNull(vm.state.value.selectedId)
             onView(withId(R.id.start_trip)).check(matches(isNotEnabled()))
+            scenario.onActivity { vm.configure(15.0, 15.0, 68.0, 5.2, 70.0, false, false) }
+            assertEquals(Screen.HOME, vm.state.value.screen)
+            assertNull(vm.state.value.comparison)
         }
     }
 }

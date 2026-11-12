@@ -37,3 +37,5 @@
 - 위치를 통과하거나 경로가 바뀌면 기존 알림을 제거한다. 중복 알림은 앱과 서버 모두 제한한다.
 - 백그라운드 진입 때 Mock 주행을 정지한다. Activity 재생성은 ViewModel이 유지한다. 프로세스 종료 후 진행 중 주행의 복원은 아직 지원하지 않으며 완료 이력만 복원한다.
 - 완료 리포트는 서버 전송 전에 기기에 저장한다. 서버 전송 실패는 다시 저장으로 재시도한다.
+
+Android 17/API 37에서는 로컬 개발 서버 TCP 접속에도 [로컬 네트워크 runtime 권한](https://developer.android.com/privacy-and-security/local-network-permission)이 필요하다. 이 권한은 debug manifest에만 선언하고 서버 기능 사용 때 요청한다. Release는 서버 옵션을 비활성화한 오프라인 Mock 데모다.
