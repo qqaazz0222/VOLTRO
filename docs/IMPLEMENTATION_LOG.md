@@ -42,3 +42,12 @@
 
 - Android 기기 전용 SQLite 이력 저장소와 Backend 완료 API·멱등 SQLite 저장을 추가했다.
 - Mock 소비량과 실측값을 구분하며 실측값이 없으면 오차는 null이다. 정확한 좌표 이력은 저장하지 않는다.
+
+## 화면 통합 및 Pleos 디자인 적용
+
+- Home → 경로 비교 → Mock 주행 → 분기점 승인/유지 → 완료 리포트 → 이력을 ViewModel/StateFlow로 연결했다.
+- Pleos 공개 grayscale, Asta Sans, 48dp 기반 vector 아이콘, adaptive launcher, 주야간 테마, 큰 버튼·Ripple·haptic 피드백을 적용했다. 출처와 접근성 조정은 `DESIGN.md`에 기록했다.
+- 최소 API 28로 조정했다. API 37의 개발 서버 통신은 debug 전용 `ACCESS_LOCAL_NETWORK`와 사용 시 권한 요청으로 처리한다. 권한 거부 때 오프라인 데모를 유지한다.
+- Android API 37 에뮬레이터에서 5개 instrumented test 통과: 전체 Mock 여정/승인 전환/화면 재생성/DB 저장, 미지원 전환 유지, SOC 부족 차단, 주야간 대비, 실제 개발 서버와 경로·분기점·완료 API 왕복.
+- `assembleDebug`, Kotlin 단위 테스트, `lintDebug` 성공. lint 오류 0, 권장 사항 warning은 남아 있다.
+- Pleos 2.1.0 화면에서 Home/경로 비교/분기점 화면을 확인했다. Gradle connected test가 instrumentation crash에도 성공으로 끝나는 환경 문제가 있어 실제 runner의 테스트 개수와 OK 출력을 검증하는 `scripts/check_android.py`를 추가했다.

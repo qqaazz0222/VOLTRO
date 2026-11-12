@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Run instrumented journeys and verify the runner output, even if Gradle reports false success."""
+import argparse
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser()
+parser.add_argument("--serial", required=True, help="adb device serial")
+parser.add_argument("--backend", action="store_true", help="also test localhost:8000 FastAPI via emulator host")
+args = parser.parse_args()
+env = dict(os.environ)
+jdk = Path("/Applications/Android Studio.app/Contents/jbr/Contents/Home")
+if "JAVA_HOME" not in env and jdk.exists():
+    env["JAVA_HOME"] = str(jdk)
+sdk = Path(env.get("ANDROID_HOME", Path.home() / "Library/Android/sdk"))
+adb = str(sdk / "platform-tools/adb") if (sdk / "platform-tools/adb").exists() else "adb"
+subprocess.run(["./gradlew", ":app:assembleDebug", ":app:assembleDebugAndroidTest", "--console=plain"],
+               cwd=ROOT / "VOLTRO", env=env, check=True)
+for apk in ["debug/app-debug.apk", "androidTest/debug/app-debug-androidTest.apk"]:
+    subprocess.run([adb, "-s", args.serial, "install", "-r", "-g", str(ROOT / "VOLTRO/app/build/outputs/apk" / apk)], check=True)
+classes = ["com.qqaazz0222.voltro.MockJourneyTest", "com.qqaazz0222.voltro.DesignContrastTest"]
+if args.backend:
+    classes.append("com.qqaazz0222.voltro.BackendJourneyTest")
+user = subprocess.check_output([adb, "-s", args.serial, "shell", "am", "get-current-user"], text=True).strip()
+command = [adb, "-s", args.serial, "shell", "am", "instrument", "--user", user, "-w", "-r", "-e", "class", ",".join(classes),
+           "com.qqaazz0222.voltro.test/androidx.test.runner.AndroidJUnitRunner"]
+result = subprocess.run(command, capture_output=True, text=True)
+output = result.stdout + result.stderr
+artifacts = ROOT / "artifacts"
+artifacts.mkdir(exist_ok=True)
+report = artifacts / f"instrumentation-{args.serial}.txt"
+report.write_text(output)
+print(output)
+expected = 5 if args.backend else 4
+match = re.search(r"OK \((\d+) tests?\)", output)
+if result.returncode or not match or int(match[1]) != expected or "FAILURES!!!" in output:
+    sys.exit(f"Android tests failed or did not run; inspect {report}")
+print(f"Verified {expected} Android tests on {args.serial}")

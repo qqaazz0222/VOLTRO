@@ -1,0 +1,10 @@
+<resources>
+    <color name="voltro_background">#1D1E21</color>
+    <color name="voltro_surface">#313236</color>
+    <color name="voltro_text">#FFFFFF</color>
+    <color name="voltro_secondary">#C7C9CE</color>
+    <color name="voltro_positive">#86B6FF</color>
+    <color name="voltro_active">#00E074</color>
+    <color name="voltro_filled">#EDEEF2</color>
+    <color name="voltro_on_filled">#131417</color>
+</resources>

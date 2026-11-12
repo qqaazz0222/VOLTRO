@@ -1,0 +1,5 @@
+<resources>
+    <item name="destination_input" type="id" />
+    <item name="analyze_routes" type="id" />
+    <item name="start_trip" type="id" />
+</resources>
