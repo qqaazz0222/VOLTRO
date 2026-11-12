@@ -79,7 +79,9 @@ Backend 재현용 잠금 파일은 `backend/requirements.lock`이다. 필요하�
 
 Mock 차량 조회, 목적지 선택, 3개 후보 경로 비교, baseline 예측, 안전 추천, 좌표 주행 재생, 분기점 절약 안내/명시적 승인, 리포트와 최근 50개 이력 저장을 구현했다. Pleos 공개 디자인 가이드에 맞춰 Asta Sans, 회색 기반 주야간 테마, 큰 버튼과 vector/adaptive 아이콘을 적용했다.
 
-**실제 도로 공급자와 Pleos 차량·위치·내비·TTS SDK는 미연동**이다. 지도는 synthetic 좌표 모식도이며 실제 통행 안내가 아니다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스가 종료되면 진행 중인 주행을 복원하지 않으며 완료된 이력만 유지한다.
+**Home → Pleos 차량 상태 읽기**는 공식 Vehicle SDK 2.3.2로 SOC와 지원되는 누적 전비를 가져온다. Pleos Connect 2.1.0의 Vehicle Service 2.3.22에서 직접 읽기 통합 테스트를 통과했다. 입력 출처를 구분하며 용량은 설정값으로 유지한다. 에뮬레이터가 아닌 일반 Android에서는 실패를 표시하고 기존 값을 보존한다. 지속적인 telemetry가 아닌 읽기 snapshot이다.
+
+**실제 도로 공급자와 Pleos 위치·내비·TTS는 미연동**이다. SDK 차량값을 불러와도 경로와 주행은 synthetic 시뮬레이션이다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스가 종료되면 진행 중인 주행을 복원하지 않으며 완료된 이력만 유지한다.
 
 APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.
 

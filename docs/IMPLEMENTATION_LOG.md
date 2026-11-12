@@ -60,3 +60,10 @@
 - Pleos에서 5개 연속 테스트 중 4개가 통과했다. UI 전체 여정 테스트는 CarSystemUI/DrivingView의 focus·Activity lifecycle 영향을 받아 실패했다. 별도 UI 테스트에서도 FASTEST 탭이 반영되지 않는 현상을 재현했고 당시 `mCurrentFocus`가 DrivingView인 것을 확인했다. 이를 정상 통과로 처리하지 않는다. 일반 Android API 37에서는 전체 5개가 통과한다.
 - 외부 도로 경로·실차 SDK·TTS·실차 UX 인증은 여전히 미연동/미검증이다. 전체 production MVP 완료로 선언하지 않는다.
 - 주야간 테마를 Pleos 에뮬레이터에서 시각 확인했으며 테스트 후 주간 모드로 복원했다. 설정 변경은 기존 분석을 무효화하고 Home으로 돌아오도록 처리해 빈 비교 화면을 방지한다.
+
+## 공모전 가이드 재점검 — Vehicle SDK 실제 연결
+
+- 2026-11-12 공모전 개발 환경·제출·심사 안내 및 Pleos 공개 SDK 문서를 재확인했다. 공개 Vehicle State 사용 가능 안내와 Maven 배포본을 확인하여 이전의 ‘SDK 미확보’ 제약을 해소했다.
+- Vehicle 2.3.2 공식 소스의 capability/get/normal permission/%/km·kWh 단위를 확인하고 읽기 snapshot 어댑터를 구현했다.
+- Pleos 2.1.0 / Vehicle Service 2.3.22에서 SDK 직접 읽기 테스트 1개 통과. debug build·JVM 8개·lint 통과. 누적 전비/용량 fallback의 출처를 분리한다.
+- Navi/위치/TTS 및 실차 검증은 미완료다. 기존 합성 경로를 실제 내비에 보내지 않는다. 다음 작업은 제출 규격에 맞춘 release APK 패키징이다.

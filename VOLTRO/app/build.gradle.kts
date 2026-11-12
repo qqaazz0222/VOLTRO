@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation("ai.pleos.playground:Vehicle:2.3.2")
     implementation("androidx.activity:activity-ktx:1.12.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")

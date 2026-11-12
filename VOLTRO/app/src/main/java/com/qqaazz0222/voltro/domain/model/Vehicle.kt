@@ -9,6 +9,8 @@ data class VehicleEnergyState(
     val isCharging: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
     val source: DataSource = DataSource.MOCK,
+    val efficiencySource: DataSource = source,
+    val capacitySource: DataSource = source,
 ) {
     init {
         require(socPercent.isFinite() && socPercent in 0.0..100.0)

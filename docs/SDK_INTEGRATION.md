@@ -14,14 +14,27 @@
 | 사용자 입력 차량 프로필 | 구현, 시뮬레이션에만 적용 |
 | Mock 경로·위치 재생 | 구현 |
 | Mock 목적지·경로 전환 | 운전자 명시적 승인 후 시뮬레이션에 적용 |
-| Pleos 차량 데이터 읽기 | SDK 권한·artifact·시그니처 미검증 |
+| Pleos 차량 데이터 읽기 | Vehicle 2.3.2 SOC 및 누적 전비 snapshot 구현, Pleos 에뮬레이터 직접 읽기 통합 테스트 통과 |
 | Pleos 위치 읽기 | 미연동, 기기 위치 권한 요청 안 함 |
 | NaviHelper 목적지/경로 전환 | 미연동, capability=false |
 | TTS | 음성 권한·오디오 포커스·차량 정책 검증 전 비활성 |
 | 실제 도로 경로/고도 | 공급자 키·라이선스·국내 통행 검증 필요 |
 | 차량 주행 UX 제한 | 실차 상태 수신 미연동, 현재 Mock 화면만 제공 |
 
-`PleosNavigationRepository`는 명시적인 Unsupported 결과를 반환하며 실차 API를 호출하지 않는다. 실제 Vehicle/Location adapter는 SDK 확보 후 `domain/repository` 경계에 추가한다. 현재 Mock 위치는 경로 노드 사이를 보간한 값이며 실제 GPS가 아니다.
+`PleosNavigationRepository`는 명시적인 Unsupported 결과를 반환하며 내비게이션 API를 호출하지 않는다. `PleosVehicleRepository`는 공식 SDK로 읽기만 수행한다. Location adapter는 아직 없으며 Mock 위치는 노드 사이를 보간한 값이다.
+
+## 확인한 Vehicle SDK 연동
+
+2026-11-12 공개 [Vehicle SDK 설정](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/Vehicle/project-setup), [capability](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/Vehicle/check-capability), [권한](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/Vehicle/vehicle-permission) 문서 및 Maven 배포본의 소스를 확인했다.
+
+- Maven: `ai.pleos.playground:Vehicle:2.3.2`, 공식 `nexus-playground.pleos.ai` 저장소만 사용.
+- `pleos.car.permission.CAR_ENERGY`: normal 읽기 권한. 차량 제어 권한은 선언하지 않는다. SDK 자체 manifest의 service binding 권한과 query도 병합된다.
+- `Vehicle.initialize()` → `getEvBattery()` → SOC capability 확인 → SOC 읽기. 누적 전비는 별도 capability와 get으로 읽는다. 완료·실패·timeout에서 `release()`한다.
+- 공식 소스에 명시된 단위: SOC %, 누적 전비 km/kWh. null/범위 밖 값은 사용하지 않는다.
+- 누적 전비가 없으면 기존 설정값을 사용하고 출처를 구분한다. 사용 가능 용량은 설정값이다. deprecated capacity/level API는 호출하지 않는다.
+- Home의 ‘Pleos 차량 상태 읽기’로만 호출한다. snapshot이며 주행 중 실시간 telemetry를 구독하지 않는다. 다른 기기나 미지원 capability에서는 입력값을 유지한다.
+- Pleos Connect 2.1.0, Vehicle Service **2.3.22 / code 74**에서 공식 SDK 직접 읽기 테스트 1개 통과. 이는 에뮬레이터 검증이며 실차 검증이 아니다.
+- NaviHelper는 공개 SDK 정보를 확인했지만 합성 데모 경로를 실제 내비게이션 경로로 보내지 않는다. FusedLocation/TTS는 공식 프로젝트 신청 문서상 준비 중으로 안내되어 있어 임의 API를 구현하지 않는다.
 
 실차 연동 전 SDK 계약, 권한, 데이터 최신성, 정확도, `navigationSelectable`와 변경 결과 확인을 검증해야 한다. 분석 성공이 실제 내비게이션 경로 변경 성공을 의미하지 않는다.
 

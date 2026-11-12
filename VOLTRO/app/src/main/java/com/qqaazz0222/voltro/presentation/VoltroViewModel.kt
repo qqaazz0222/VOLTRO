@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.qqaazz0222.voltro.data.local.TripStore
 import com.qqaazz0222.voltro.data.mock.*
 import com.qqaazz0222.voltro.data.remote.*
+import com.qqaazz0222.voltro.data.pleos.PleosVehicleRepository
 import com.qqaazz0222.voltro.domain.model.*
 import com.qqaazz0222.voltro.domain.repository.RouteChangeResult
 import com.qqaazz0222.voltro.domain.usecase.*
@@ -58,6 +59,24 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
 
     fun selectDestination(destination: Destination) {
         mutable.update { it.copy(destination = destination, error = null) }
+    }
+    fun readPleosVehicle() {
+        if (state.value.busy || state.value.driving != null) return
+        mutable.update { it.copy(busy = true, error = null, message = "Pleos 차량 상태를 확인하고 있습니다…") }
+        viewModelScope.launch(exceptionHandler) {
+            try {
+                val snapshot = PleosVehicleRepository(getApplication(), state.value.vehicle).getVehicleEnergyState()
+                mutable.update { it.copy(vehicle = snapshot, comparison = null, selectedId = null, busy = false,
+                    message = "Pleos SOC를 불러왔습니다. 용량은 설정값이며 경로·주행은 데모입니다.") }
+            } catch (cancelled: CancellationException) {
+                if (cancelled is TimeoutCancellationException) mutable.update { it.copy(busy = false, message = null,
+                    error = "Pleos 응답 시간이 초과되었습니다. 기존 차량값을 유지합니다.") }
+                else throw cancelled
+            } catch (_: Exception) {
+                mutable.update { it.copy(busy = false, message = null,
+                    error = "Pleos 차량값을 읽지 못했습니다. SDK 서비스·권한·지원 여부를 확인하세요. 기존 차량값을 유지합니다.") }
+            }
+        }
     }
     fun clearNotice() { mutable.update { it.copy(error = null, message = null) } }
     fun serverPermissionDenied() {

@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
         val vehicle = card()
         vehicle.addView(row().apply {
             addView(text("MY ENERGY", 12f, muted, true), LinearLayout.LayoutParams(0, -2, 1f))
-            addView(badge(if (state.vehicle.source == DataSource.USER_INPUT) "사용자 입력" else "Demo EV", accent))
+            addView(badge(when (state.vehicle.source) { DataSource.PLEOS -> "Pleos SOC"; DataSource.USER_INPUT -> "사용자 입력"; else -> "Demo EV" }, accent))
         })
         vehicle.addView(BatteryGaugeView(this, state.vehicle.socPercent), LinearLayout.LayoutParams(-1, dp(if (wide) 204 else 180)))
         vehicle.addView(text("출발할 준비가 되었어요", 21f, white, true).apply { gravity = Gravity.CENTER }, margin(bottom = 20))
@@ -205,7 +205,11 @@ class MainActivity : ComponentActivity() {
         vehicle.addView(divider())
         vehicle.addView(text("최소 도착 잔량 ${f(state.preferences.minArrivalSoc, 0)}%  ·  추가 시간 ${f(state.preferences.maxExtraMinutes, 0)}분 이내", 13f, muted), margin(top = 16, bottom = 8))
         vehicle.addView(text(if (state.serverMode) "●  개발 서버로 분석 · Mock 데이터" else "●  오프라인 데모 · 서버 없이 실행", 13f, accent), margin(bottom = 4))
-        vehicle.addView(text("실차 정보 및 실제 도로 경로가 아닙니다.", 12f, muted))
+        vehicle.addView(text(if (state.vehicle.source == DataSource.PLEOS)
+            "SOC: SDK 스냅샷 · 전비: ${if (state.vehicle.efficiencySource == DataSource.PLEOS) "SDK" else "설정값"} · 용량: 설정값"
+            else "차량값은 데모 설정값입니다.", 12f, muted))
+        vehicle.addView(text("경로·주행은 실제 도로가 아닌 시뮬레이션입니다.", 12f, muted), margin(top = 6))
+        vehicle.addView(button(if (state.busy) "처리 중…" else "Pleos 차량 상태 읽기", enabled = !state.busy) { vm.readPleosVehicle() }, margin(top = 16))
         addPanels(content, planning, vehicle)
         body.addView(content)
         if (state.comparison != null) body.addView(button("마지막 경로 분석 보기", enabled = !state.busy) { vm.previousComparison() }, margin(top = 16))
