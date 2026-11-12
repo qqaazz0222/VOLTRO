@@ -1,0 +1,29 @@
+{
+  "version": "1.1.0-mvp",
+  "soc": 100,
+  "vehicle_source": "PLEOS",
+  "trip_id": "0b8afbe9-4a0b-4344-a11e-128b9771cfc6",
+  "routes": [
+    {
+      "label": "빠른 경로",
+      "id": "osrm_gangneung_0",
+      "distance_km": 218.3307,
+      "minutes": 179.26833333333335,
+      "energy_kwh": 41.986673076923076,
+      "arrival_soc": 40.01903846153846,
+      "geometry_points": 3139
+    },
+    {
+      "label": "대안 경로 1",
+      "id": "osrm_gangneung_1",
+      "distance_km": 218.3348,
+      "minutes": 180.65,
+      "energy_kwh": 41.98746153846154,
+      "arrival_soc": 40.01791208791209,
+      "geometry_points": 2173
+    }
+  ],
+  "completed_route": "빠른 경로",
+  "completed_energy_kwh": 41.98667307692311,
+  "completed_km": 218.3307
+}

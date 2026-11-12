@@ -6,7 +6,7 @@ Your Route. Your Energy.
 
 **공모전 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
 
-**실제 실행 화면 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
+**실제 Pleos 화면 10개를 담은 12쪽 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
 
 **로고와 앱 아이콘:** [브랜드 자산 및 SVG·PNG](design/brand/README.md).
 
@@ -92,6 +92,15 @@ python3 scripts/check_android.py --serial emulator-5554 --backend
 
 # Pleos Vehicle Service가 있는 에뮬레이터에서 SDK 읽기만 검사 (1 test)
 python3 scripts/check_android.py --serial emulator-5554 --pleos-vehicle
+
+# 인터넷으로 실제 OSM/OSRM 도로 여정 검사 (1 test)
+python3 scripts/check_android.py --serial emulator-5554 --roads
+
+# 넓은 Pleos 창의 글자·버튼 검사 (1 test)
+python3 scripts/check_android.py --serial emulator-5554 --pleos-layout
+
+# Pleos SDK·실도로 여정을 실행하여 가이드용 native 원본 촬영 (1 test)
+python3 scripts/check_android.py --serial emulator-5554 --capture-guide
 ```
 
 장치 ID는 `adb devices`로 확인한다. 스크립트는 테스트 APK 설치, 선언된 테스트용 runtime 권한 허용, 현재 Android 사용자로 instrumentation 실행, 실제 runner의 테스트 수·성공 여부를 확인한다. 결과는 Git에서 제외한 `artifacts/instrumentation-<serial>.txt`에 저장한다.
@@ -112,7 +121,7 @@ Pleos에서 APK 재설치 직후 SDK capability 응답 timeout도 관찰했다. 
 
 공모전용 APK는 `apk/VOLTRO_VOLTRO_release.apk`이며 release 빌드·zipalign·v3 서명·non-debuggable 확인 후 패키징한다. 서명키와 암호는 저장소 밖에 보관한다. 소스 커밋이 확정된 상태에서 `python3 scripts/build_submission.py --team VOLTRO`로 다시 만들 수 있다. [패키징 설명](apk/README.md)을 참고한다.
 
-서명된 release의 실제 UI 시연 검사는 `python3 scripts/smoke_submission.py --serial <장치ID>`로 실행한다. debug 앱과 서명이 다르므로 기존 앱을 삭제하지 말고 별도 에뮬레이터 데이터를 사용한다. 스크립트는 설치 실패 시 데이터 삭제를 시도하지 않는다.
+서명된 release의 실제 UI 시연 검사는 `python3 scripts/smoke_submission.py --serial <장치ID>`로 실행한다. `--roads`를 추가하면 실제 OSM/OSRM 도로 모드를 검사한다. debug 앱과 서명이 다르므로 기존 앱을 삭제하지 말고 별도 에뮬레이터 데이터를 사용한다. 스크립트는 설치 실패 시 데이터 삭제를 시도하지 않는다.
 
 - [API 계약](docs/API_SPEC.md)
 - [Pleos 디자인 적용](docs/DESIGN.md)

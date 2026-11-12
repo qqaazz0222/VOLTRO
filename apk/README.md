@@ -6,8 +6,9 @@
 - APK는 non-debuggable release이며 지원 기기(API 28 이상)에 대한 v3 서명을 검증한다. 동봉 JSON에는 소스 커밋, SHA-256, 공개 인증서 fingerprint를 기록한다.
 - 기본 서명키는 이 PC의 `~/.local/share/voltro/contest-signing/`에만 저장하는 **공모전 데모 전용** 키다. 키·암호는 Git에 넣지 않는다. Pleos Market 등록용 신원이나 제조사 서명이 아니다.
 - 동일 application ID의 debug APK가 설치되어 있다면 서명이 달라 업데이트 설치가 되지 않는다. 해당 테스트 앱의 이력을 보존해야 한다면 별도 에뮬레이터에서 실행한다.
-- 기본 시연은 서버 없이 가능하다. Home → 강릉역 → 경로 분석 → 빠른 경로 → Mock 주행 → 분기점 승인 → 리포트 순서다.
-- Pleos Vehicle SDK snapshot은 실제 에뮬레이터 서비스와 연동하지만 경로/주행은 합성 데이터다. 일반 Android에서도 오프라인 데모를 실행할 수 있다.
+- 기본 실제 도로 모드는 인터넷으로 OSM 지도·OSRM 도로 경로를 조회한다. Home → 실제 도로 → 강릉역 → 경로 분석 → 경로 선택 → 주행 재생 → 리포트 순서다. 최소 도착 잔량을 충족할 만큼 SOC를 입력하거나 Pleos 값을 읽는다.
+- 별도 오프라인 시연은 Home → 오프라인 데모 → 강릉역 → 경로 분석 → 빠른 경로 → Mock 주행 → 분기점 승인 → 리포트 순서다.
+- Pleos Vehicle SDK snapshot은 실제 에뮬레이터 서비스와 연동한다. 도로 경로 모드도 주행은 좌표 재생이며, 오프라인 모드는 합성 경로를 사용한다. 일반 Android에서도 두 모드를 실행할 수 있다.
 - 디버그용 로컬 HTTP 서버 옵션은 release에서 비활성화된다.
 
 재생성 (소스가 커밋된 상태, JDK와 Android SDK 필요):
