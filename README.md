@@ -90,6 +90,8 @@ Mock 차량 조회, 목적지 선택, 3개 후보 경로 비교, baseline 예측
 
 **Home → Pleos 차량 상태 읽기**는 공식 Vehicle SDK 2.3.2로 SOC와 지원되는 누적 전비를 가져온다. Pleos Connect 2.1.0의 Vehicle Service 2.3.22에서 직접 읽기 통합 테스트를 통과했다. 입력 출처를 구분하며 용량은 설정값으로 유지한다. 에뮬레이터가 아닌 일반 Android에서는 실패를 표시하고 기존 값을 보존한다. 지속적인 telemetry가 아닌 읽기 snapshot이다.
 
+Pleos에서 APK 재설치 직후 SDK capability 응답 timeout도 관찰했다. cold boot 후 읽기는 성공했으며, 연결 안정성과 실차 동작은 추가 검증이 필요하다. timeout을 mock 성공값으로 바꾸지 않는다.
+
 **실제 도로 공급자와 Pleos 위치·내비·TTS는 미연동**이다. SDK 차량값을 불러와도 경로와 주행은 synthetic 시뮬레이션이다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스가 종료되면 진행 중인 주행을 복원하지 않으며 완료된 이력만 유지한다.
 
 개발용 APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.

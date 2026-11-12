@@ -34,6 +34,8 @@
 - 누적 전비가 없으면 기존 설정값을 사용하고 출처를 구분한다. 사용 가능 용량은 설정값이다. deprecated capacity/level API는 호출하지 않는다.
 - Home의 ‘Pleos 차량 상태 읽기’로만 호출한다. snapshot이며 주행 중 실시간 telemetry를 구독하지 않는다. 다른 기기나 미지원 capability에서는 입력값을 유지한다.
 - Pleos Connect 2.1.0, Vehicle Service **2.3.22 / code 74**에서 공식 SDK 직접 읽기 테스트 1개 통과. 이는 에뮬레이터 검증이며 실차 검증이 아니다.
+- cold boot 환경에서는 동일 프로세스 내 두 번의 initialize/read/release를 확인했다. SDK만 검사할 때 `scripts/check_android.py --serial <ID> --pleos-vehicle`을 사용한다.
+- APK를 재설치한 직후 capability 콜백이 6초 내에 오지 않는 경우를 재현했다. 같은 에뮬레이터를 cold boot한 후에는 읽기에 성공했다. 기존 값 유지와 명시적 timeout 처리를 적용했으며, 이를 SDK/서비스 연결의 안정성 검증 완료로 표시하지 않는다. 설치 후 SDK 테스트가 timeout이면 공식 권장 cold boot 환경에서 다시 확인한다. 앱에서 시스템 서비스를 강제 종료하지 않는다.
 - NaviHelper는 공개 SDK 정보를 확인했지만 합성 데모 경로를 실제 내비게이션 경로로 보내지 않는다. FusedLocation/TTS는 공식 프로젝트 신청 문서상 준비 중으로 안내되어 있어 임의 API를 구현하지 않는다.
 
 실차 연동 전 SDK 계약, 권한, 데이터 최신성, 정확도, `navigationSelectable`와 변경 결과 확인을 검증해야 한다. 분석 성공이 실제 내비게이션 경로 변경 성공을 의미하지 않는다.

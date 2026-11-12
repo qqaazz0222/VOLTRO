@@ -25,5 +25,10 @@ class PleosVehicleIntegrationTest {
         assertEquals(70.0, vehicle.usableBatteryCapacityKwh, 0.0)
         assertEquals(DataSource.MOCK, vehicle.capacitySource)
         assertEquals(vehicle, repository.observeVehicleEnergyState().value)
+        // A second initialize/read/release in the same process must remain usable.
+        val again = repository.getVehicleEnergyState()
+        assertEquals(DataSource.PLEOS, again.source)
+        assertTrue(again.socPercent in 0.0..100.0)
+        assertTrue(again.timestamp >= vehicle.timestamp)
     }
 }

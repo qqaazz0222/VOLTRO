@@ -61,6 +61,7 @@ command("shell", "input", "keyevent", "KEYCODE_WAKEUP")
 command("shell", "wm", "dismiss-keyguard")
 command("shell", "am", "start", "-n", f"{package}/{package}.MainActivity")
 time.sleep(2)
+assert any(node.get("text") == "VOLTRO" for node in dump().iter("node")), "Release did not reach Home"
 checkpoint("home")
 tap("text", "Pleos 차량 상태 읽기")
 time.sleep(8)
@@ -71,6 +72,7 @@ tap("text", "닫기")
 tap("text", "강릉역", direction="down")
 tap("resource-id", f"{package}:id/analyze_routes")
 tap("content-desc", "빠른 경로 선택")
+assert any("도착 18.5%" in node.get("text", "") for node in dump().iter("node")), "Default battery profile changed after SDK failure"
 checkpoint("comparison")
 tap("resource-id", f"{package}:id/start_trip")
 # The simulator pauses itself in the decision window; only inspect after that point.

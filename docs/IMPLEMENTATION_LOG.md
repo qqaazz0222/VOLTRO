@@ -67,3 +67,11 @@
 - Vehicle 2.3.2 공식 소스의 capability/get/normal permission/%/km·kWh 단위를 확인하고 읽기 snapshot 어댑터를 구현했다.
 - Pleos 2.1.0 / Vehicle Service 2.3.22에서 SDK 직접 읽기 테스트 1개 통과. debug build·JVM 8개·lint 통과. 누적 전비/용량 fallback의 출처를 분리한다.
 - Navi/위치/TTS 및 실차 검증은 미완료다. 기존 합성 경로를 실제 내비에 보내지 않는다. 다음 작업은 제출 규격에 맞춘 release APK 패키징이다.
+
+## 공모전용 release 검증
+
+- 공식 제출 안내에 따라 `apk/팀명_VOLTRO_release.apk`, 소스 커밋·SHA-256·공개 서명 fingerprint 메타데이터, 재생성 스크립트를 준비했다. 서명 비밀정보는 저장소 밖의 로컬 데모 키로 관리한다.
+- 원본 프로젝트의 `optimization.packageScope` 설정으로 release가 AndroidX Startup에서 `IllegalAccessError`를 내는 것을 발견했다. Kotlin collection 상속 접근 오류를 로그/매핑으로 확인하고 부분 scope를 제거해 전체 R8 최적화로 전환했다.
+- 수정된 release APK(약 4.3MiB)는 별도 Android API 37 userdata에서 실행·SDK 미지원 fallback·경로 비교·분기점 승인·완료 리포트·이력 저장 UI 검사를 통과했다. 서명 및 실행 검증 전 APK를 정상 산출물로 처리하지 않았다.
+- Pleos SDK는 첫 읽기와 cold boot 후 읽기에 성공했다. 앱 재설치 직후 capability callback timeout도 재현했으므로 반복 연결 안정성은 제약으로 남긴다. 실패 시 차량 입력을 유지한다.
+- cold boot 후 같은 프로세스에서 `initialize → 읽기 → release`를 두 차례 연속 수행하는 SDK 테스트도 통과했다. 재설치 직후의 서비스 응답 지연과 구분한다.

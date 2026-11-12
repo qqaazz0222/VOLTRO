@@ -23,6 +23,7 @@
 - Android API 37: **5 instrumented tests passed** (Mock 3, 디자인 1, Backend 1).
 - Pleos Connect 2.1.0: **Vehicle SDK 직접 읽기 통합 테스트 1개 통과**, Vehicle Service 2.3.22. `PleosVehicleIntegrationTest`는 일반 Android의 기본 테스트 모음과 분리한다.
 - `assembleDebug`, `testDebugUnitTest`, `lintDebug` 성공. lint error 0. SDK 업데이트 권장·View draw 할당·다국어 리소스 등 warning은 남아 있다.
+- 공모전용 release: `assembleRelease`·zipalign·v3 서명·non-debuggable 확인. 별도의 일반 Android API 37 에뮬레이터 데이터에서 서명된 APK를 직접 설치해 Home → SDK 미지원 fallback → 비교 → 분기점 승인 → 리포트 → 기기 이력 저장까지 UI smoke 테스트 통과.
 - Pleos Connect 2.1.0: 기본 앱 실행, 차량 Mock/API 상태 표시, Home/경로 비교/분기점 화면을 직접 확인했다. 5개 연속 테스트 중 4개(미지원 전환, SOC, 대비, Backend 왕복)는 통과했으며 UI 전체 여정 테스트는 시스템 focus/lifecycle 문제로 실패했다. 전체 5개 통과로 집계하지 않는다.
 
 ## 수동 시연
@@ -41,3 +42,5 @@
 실제 국내 도로 및 경로 공급자, SDK 차량 필드·위치 정확도·내비 capability, 실차 계측 에너지, TTS 정책, 제조사별 UI·런처 마스킹·주행 안전 심사, production API 인증·부하·개인정보 정책은 미검증이다. 실차 정확도 목표를 달성했다고 주장하지 않는다.
 
 Pleos emulator의 system DrivingView/CarSystemUI가 headless 환경에서 crash하거나 instrumentation Activity의 lifecycle에 영향을 줄 수 있다. Gradle의 `BUILD SUCCESSFUL`만으로 테스트를 통과 처리하지 않고 `check_android.py`가 실제 runner 결과를 검사한다.
+
+SDK 검사만 실행하려면 `check_android.py --serial <Pleos ID> --pleos-vehicle`을 사용한다. APK 재설치 직후 capability callback timeout도 관찰되었으며 cold boot 후 재확인한다. 실패를 숨기거나 mock 응답을 SDK 성공으로 반환하지 않는다.
