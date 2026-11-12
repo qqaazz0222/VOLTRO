@@ -2,12 +2,18 @@
 
 Your Route. Your Energy.
 
+전기차의 SOC와 전비로 경로별 예상 소비량·도착 잔량을 비교하고 분기점의 에너지 절약 효과를 안내하는 Pleos용 주행 의사결정 보조 앱입니다. 현재 경로·주행은 시뮬레이션이며, 차량 SOC·전비는 선택적으로 공식 Vehicle SDK에서 읽을 수 있습니다.
+
+**공모전 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
+
 `MVP_SPEC.md` 기반의 전기차 에너지 경로 비교 앱. 기존 Android Studio 프로젝트는 `VOLTRO/`, FastAPI 서버는 `backend/`에 있다.
 
 ## 개발 환경
 
 - Android Studio의 bundled JDK, 프로젝트에 포함된 Gradle wrapper, Android SDK 37
 - Python 3.11 이상
+
+검증 디스플레이: Pleos Connect **2.1.0**, Android **14/API 34**, **2560×1440 px / 160 dpi**, 확장 앱 영역 관찰값 **1682×1210 px**. 일반 Android **API 37**, **1080×2400 px / 420 dpi**에서도 검사한다. 설정·실제 SDK 지원 범위와 평가 항목별 대응은 [공모전 기준](docs/CONTEST_ALIGNMENT.md)에 정리했다.
 
 ```sh
 python3 -m venv .venv
@@ -69,6 +75,9 @@ python3 scripts/check_android.py --serial emulator-5554
 
 # FastAPI가 실행 중일 때 서버 왕복까지 포함 (5 tests)
 python3 scripts/check_android.py --serial emulator-5554 --backend
+
+# Pleos Vehicle Service가 있는 에뮬레이터에서 SDK 읽기만 검사 (1 test)
+python3 scripts/check_android.py --serial emulator-5554 --pleos-vehicle
 ```
 
 장치 ID는 `adb devices`로 확인한다. 스크립트는 테스트 APK 설치, 선언된 테스트용 runtime 권한 허용, 현재 Android 사용자로 instrumentation 실행, 실제 runner의 테스트 수·성공 여부를 확인한다. 결과는 Git에서 제외한 `artifacts/instrumentation-<serial>.txt`에 저장한다.
@@ -83,7 +92,11 @@ Mock 차량 조회, 목적지 선택, 3개 후보 경로 비교, baseline 예측
 
 **실제 도로 공급자와 Pleos 위치·내비·TTS는 미연동**이다. SDK 차량값을 불러와도 경로와 주행은 synthetic 시뮬레이션이다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스가 종료되면 진행 중인 주행을 복원하지 않으며 완료된 이력만 유지한다.
 
-APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.
+개발용 APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.
+
+공모전용 APK는 `apk/VOLTRO_VOLTRO_release.apk`이며 release 빌드·zipalign·v3 서명·non-debuggable 확인 후 패키징한다. 서명키와 암호는 저장소 밖에 보관한다. 소스 커밋이 확정된 상태에서 `python3 scripts/build_submission.py --team VOLTRO`로 다시 만들 수 있다. [패키징 설명](apk/README.md)을 참고한다.
+
+서명된 release의 실제 UI 시연 검사는 `python3 scripts/smoke_submission.py --serial <장치ID>`로 실행한다. debug 앱과 서명이 다르므로 기존 앱을 삭제하지 말고 별도 에뮬레이터 데이터를 사용한다. 스크립트는 설치 실패 시 데이터 삭제를 시도하지 않는다.
 
 - [API 계약](docs/API_SPEC.md)
 - [Pleos 디자인 적용](docs/DESIGN.md)

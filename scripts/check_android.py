@@ -10,7 +10,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--serial", required=True, help="adb device serial")
-parser.add_argument("--backend", action="store_true", help="also test localhost:8000 FastAPI via emulator host")
+mode = parser.add_mutually_exclusive_group()
+mode.add_argument("--backend", action="store_true", help="also test localhost:8000 FastAPI via emulator host")
+mode.add_argument("--pleos-vehicle", action="store_true", help="only test real Vehicle SDK reads on a Pleos emulator")
 args = parser.parse_args()
 env = dict(os.environ)
 jdk = Path("/Applications/Android Studio.app/Contents/jbr/Contents/Home")
@@ -25,6 +27,8 @@ for apk in ["debug/app-debug.apk", "androidTest/debug/app-debug-androidTest.apk"
 classes = ["com.qqaazz0222.voltro.MockJourneyTest", "com.qqaazz0222.voltro.DesignContrastTest"]
 if args.backend:
     classes.append("com.qqaazz0222.voltro.BackendJourneyTest")
+if args.pleos_vehicle:
+    classes = ["com.qqaazz0222.voltro.PleosVehicleIntegrationTest"]
 user = subprocess.check_output([adb, "-s", args.serial, "shell", "am", "get-current-user"], text=True).strip()
 command = [adb, "-s", args.serial, "shell", "am", "instrument", "--user", user, "-w", "-r", "-e", "class", ",".join(classes),
            "com.qqaazz0222.voltro.test/androidx.test.runner.AndroidJUnitRunner"]
@@ -35,7 +39,7 @@ artifacts.mkdir(exist_ok=True)
 report = artifacts / f"instrumentation-{args.serial}.txt"
 report.write_text(output)
 print(output)
-expected = 5 if args.backend else 4
+expected = 1 if args.pleos_vehicle else (5 if args.backend else 4)
 match = re.search(r"OK \((\d+) tests?\)", output)
 if result.returncode or not match or int(match[1]) != expected or "FAILURES!!!" in output:
     sys.exit(f"Android tests failed or did not run; inspect {report}")
