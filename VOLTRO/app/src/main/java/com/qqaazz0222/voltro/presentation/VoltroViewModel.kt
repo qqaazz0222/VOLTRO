@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.qqaazz0222.voltro.data.local.TripStore
+import com.qqaazz0222.voltro.data.local.DrivingSession
+import com.qqaazz0222.voltro.data.local.DrivingSessionStore
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.qqaazz0222.voltro.data.mock.*
 import com.qqaazz0222.voltro.data.remote.*
 import com.qqaazz0222.voltro.data.pleos.PleosVehicleRepository
@@ -17,6 +21,8 @@ import kotlinx.coroutines.flow.*
 import org.json.JSONObject
 import kotlin.math.*
 
+enum class DemoScenario { SAVING, LOW_BATTERY, CHANGE_FAILURE }
+
 enum class Screen { HOME, COMPARISON, DRIVING, REPORT, HISTORY }
 data class AppState(
     val screen: Screen = Screen.HOME, val vehicle: VehicleEnergyState = VehicleEnergyState(),
@@ -25,7 +31,7 @@ data class AppState(
     val destination: Destination? = null, val comparison: RouteComparison? = null,
     val selectedId: String? = null, val driving: DrivingState? = null,
     val report: TripRecord? = null, val history: List<TripRecord> = emptyList(),
-    val failRouteChange: Boolean = false,
+    val failRouteChange: Boolean = false, val recoveryAvailable: Boolean = false,
 )
 
 class VoltroViewModel(application: Application) : AndroidViewModel(application) {
@@ -38,12 +44,16 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
     private val road = OsrmRouteRepository(local.origin, application.getString(R.string.routing_base_url))
     private val navigation = MockNavigationRepository()
     private val store = TripStore(application)
+    private val sessions = DrivingSessionStore(application)
+    private val sessionLock = Mutex()
+    private var checkpointAt = 0L
     private val mutable = MutableStateFlow(AppState(
         vehicle = VehicleEnergyState(storedNumber("soc", 68.0), storedNumber("efficiency", 5.2),
             storedNumber("capacity", 70.0), source = if (settings.getBoolean("manualVehicle", false)) DataSource.USER_INPUT else DataSource.MOCK),
         preferences = Preferences(storedNumber("minSoc", 15.0), storedNumber("extra", 15.0)),
         serverMode = developerBuild && settings.getBoolean("server", false),
         roadMode = settings.getBoolean("roadMode", true),
+        recoveryAvailable = sessions.exists(),
     ))
     val state = mutable.asStateFlow()
     val destinations = local.destinations
@@ -60,6 +70,79 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
     private fun refreshHistory() = viewModelScope.launch(exceptionHandler) {
         val records = withContext(Dispatchers.IO) { store.recent() }
         mutable.update { it.copy(history = records) }
+    }
+
+    /** Explicitly loads a checkpoint; replay always stays paused until the user continues. */
+    fun restoreDriving() {
+        if (state.value.busy || state.value.driving != null) return
+        mutable.update { it.copy(busy = true, error = null, message = null) }
+        viewModelScope.launch(exceptionHandler) {
+            try {
+                val saved = sessionLock.withLock { withContext(Dispatchers.IO) { sessions.read() } }
+                    ?: error("Missing checkpoint")
+                // A completed record wins over a checkpoint left by a process death during finalization.
+                val completed = withContext(Dispatchers.IO) { store.recent().firstOrNull { it.id == saved.comparison.tripId } }
+                if (completed != null) {
+                    sessionLock.withLock { withContext(Dispatchers.IO) { sessions.clear() } }
+                    mutable.update { it.copy(busy = false, recoveryAvailable = false, screen = Screen.REPORT, report = completed) }
+                    return@launch
+                }
+                navigation.simulateChangeFailure = saved.failRouteChange
+                notified.clear(); notified.addAll(saved.notified)
+                processedJunctions.clear(); processedJunctions.addAll(saved.processedJunctions)
+                mutable.update { it.copy(busy = false, recoveryAvailable = false, screen = Screen.DRIVING,
+                    vehicle = saved.vehicle, preferences = saved.preferences, comparison = saved.comparison,
+                    selectedId = saved.driving.activeRoute.id, destination = saved.comparison.destination,
+                    roadMode = saved.comparison.roadNetwork, serverMode = saved.comparison.remote,
+                    failRouteChange = saved.failRouteChange, driving = saved.driving,
+                    message = "중단된 재생을 복구했습니다. 당시 입력값을 사용하며 계속 버튼을 누르기 전까지 정지합니다.") }
+                launchTicker()
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) {
+                sessionLock.withLock { withContext(Dispatchers.IO) { sessions.clear() } }
+                mutable.update { it.copy(busy = false, recoveryAvailable = false,
+                    error = "복구 기록이 만료되었거나 손상되었습니다. 새로 분석하세요. 완료 이력은 유지됩니다.") }
+            }
+        }
+    }
+    fun discardRecovery() {
+        if (state.value.busy || state.value.driving != null) return
+        mutable.update { it.copy(busy = true) }
+        viewModelScope.launch(exceptionHandler) {
+            sessionLock.withLock { withContext(Dispatchers.IO) { sessions.clear() } }
+            mutable.update { it.copy(busy = false, recoveryAvailable = false, message = "중단된 재생 기록을 삭제했습니다. 완료 이력은 유지됩니다.") }
+        }
+    }
+    private suspend fun checkpoint() = sessionLock.withLock {
+        val snapshot = state.value
+        val d = snapshot.driving
+        val c = snapshot.comparison
+        try {
+            val session = if (d == null || c == null) null else DrivingSession(snapshot.vehicle, snapshot.preferences, c, d,
+                notified.toSet(), processedJunctions.toSet(), snapshot.failRouteChange)
+            withContext(Dispatchers.IO) {
+                if (session == null) sessions.clear() else sessions.save(session)
+            }
+            checkpointAt = android.os.SystemClock.elapsedRealtime()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) {
+            mutable.update { it.copy(error = "재생 복구 기록을 저장하지 못했습니다. 현재 재생은 유지되지만 앱 종료 후 복구되지 않을 수 있습니다.") }
+        }
+    }
+    private fun saveCheckpoint() { viewModelScope.launch(exceptionHandler) { checkpoint() } }
+
+    private var demoFastest = false
+    fun prepareDemo(scenario: DemoScenario) {
+        if (state.value.busy || state.value.driving != null || state.value.recoveryAvailable) return
+        // Demo inputs are transient: leave the user's persisted profile untouched.
+        demoFastest = scenario != DemoScenario.LOW_BATTERY
+        navigation.simulateChangeFailure = scenario == DemoScenario.CHANGE_FAILURE
+        mutable.update { it.copy(screen = Screen.HOME, vehicle = VehicleEnergyState(socPercent =
+            if (scenario == DemoScenario.LOW_BATTERY) 20.0 else 68.0), preferences = Preferences(),
+            roadMode = false, serverMode = false, comparison = null, selectedId = null,
+            destination = destinations.first(), failRouteChange = scenario == DemoScenario.CHANGE_FAILURE,
+            error = null, message = null) }
+        analyze(destinations.first().name)
     }
 
     fun selectDestination(destination: Destination) {
@@ -86,15 +169,20 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
     fun clearNotice() { mutable.update { it.copy(error = null, message = null) } }
     fun setRoadMode(enabled: Boolean) {
         if (state.value.busy || state.value.driving != null) return
+        demoFastest = false
+        navigation.simulateChangeFailure = false
         settings.edit().putBoolean("roadMode", enabled).putBoolean("server", false).apply()
         mutable.update { it.copy(roadMode = enabled, serverMode = false, comparison = null, selectedId = null,
-            error = null, message = null) }
+            failRouteChange = false, error = null, message = null) }
     }
     fun serverPermissionDenied() {
         mutable.update { it.copy(error = "개발 서버 연결에는 로컬 네트워크 권한이 필요합니다. 오프라인 데모도 사용할 수 있습니다.") }
     }
     fun analyze(query: String) {
         if (state.value.busy || state.value.driving != null) return
+        if (state.value.recoveryAvailable) {
+            mutable.update { it.copy(error = "중단된 재생을 복구하거나 삭제한 뒤 새 여정을 분석하세요.") }; return
+        }
         lastQuery = query
         val destination = destinations.firstOrNull { query.isNotBlank() && (it.name.contains(query.trim(), true) || query.contains(it.name, true)) }
             ?: state.value.destination.takeIf { query.isBlank() || query == it?.name }
@@ -109,8 +197,9 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
                 val repository = when { snapshot.serverMode -> remote; snapshot.roadMode -> road; else -> local }
                 val result = repository.compare(destination, snapshot.vehicle, snapshot.preferences)
                 mutable.update { it.copy(busy = false, destination = destination, comparison = result,
-                    selectedId = result.recommendedId ?: result.routes.firstOrNull { r -> r.arrivalSoc >= snapshot.preferences.minArrivalSoc }?.id,
+                    selectedId = (if (demoFastest) result.routes.firstOrNull { r -> r.type == RouteType.FASTEST }?.id else result.recommendedId) ?: result.routes.firstOrNull { r -> r.arrivalSoc >= snapshot.preferences.minArrivalSoc }?.id,
                     screen = Screen.COMPARISON) }
+                demoFastest = false
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) {
                 mutable.update { it.copy(busy = false, error = if (snapshot.roadMode && !snapshot.serverMode)
@@ -185,11 +274,17 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         processedJunctions.clear()
         mutable.update { it.copy(screen = Screen.DRIVING, error = null, message = null,
             driving = DrivingState(comparison.tripId, route, route)) }
+        launchTicker()
+    }
+    private fun launchTicker() {
         ticker?.cancel()
         ticker = viewModelScope.launch(exceptionHandler) {
+            checkpoint()
             while (isActive && this@VoltroViewModel.state.value.driving != null) {
                 delay(500)
                 tick()
+                // Finalization clears only after SQLite succeeds; retain the checkpoint on save failure.
+                if (state.value.driving != null && android.os.SystemClock.elapsedRealtime() - checkpointAt >= 5000) checkpoint()
             }
         }
     }
@@ -253,14 +348,21 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val displayed = advice
         mutable.update { it.copy(error = failure, driving = it.driving?.copy(
             junctionChecked = true, advice = displayed, paused = displayed != null)) }
+        checkpoint()
     }
 
     fun togglePause() {
+        if (state.value.busy || state.value.driving?.advice != null) return
         mutable.update { it.copy(driving = it.driving?.let { d ->
-            d.copy(paused = !d.paused, advice = if (d.paused) null else d.advice) }) }
+            d.copy(paused = !d.paused) }) }
+        saveCheckpoint()
     }
     fun changeSpeed() { mutable.update { it.copy(driving = it.driving?.let { d -> d.copy(speed = when (d.speed) { 1 -> 4; 4 -> 12; else -> 1 }) }) } }
-    fun dismissAdvice() { mutable.update { it.copy(driving = it.driving?.copy(advice = null, paused = false)) } }
+    fun dismissAdvice() {
+        if (state.value.busy) return
+        mutable.update { it.copy(driving = it.driving?.copy(advice = null, paused = false)) }
+        saveCheckpoint()
+    }
     fun acceptAdvice() {
         val advice = state.value.driving?.advice ?: return
         if (state.value.busy) return
@@ -274,17 +376,23 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
                             advice = null, paused = false, routeChanged = true, junctionChecked = false)
                     }) }
                 is RouteChangeResult.Unsupported -> mutable.update { it.copy(busy = false, error = result.reason,
-                    driving = it.driving?.copy(advice = null, paused = false)) }
+                    driving = it.driving?.copy(advice = null, paused = true)) }
             }
+            checkpoint()
         }
     }
     fun stopDriving() {
         ticker?.cancel()
-        mutable.update { it.copy(driving = null, screen = Screen.HOME, busy = false,
-            message = "데모 주행을 취소했습니다. 완료 이력으로 저장하지 않습니다.", error = null) }
+        mutable.update { it.copy(driving = null, screen = Screen.HOME, busy = true, message = null, error = null) }
+        viewModelScope.launch(exceptionHandler) {
+            checkpoint()
+            mutable.update { it.copy(busy = false,
+                message = "데모 주행을 취소했습니다. 완료 이력으로 저장하지 않습니다.") }
+        }
     }
     fun pauseForBackground() {
         mutable.update { it.copy(driving = it.driving?.copy(paused = true)) }
+        saveCheckpoint()
     }
 
     private suspend fun finishTrip() {
@@ -295,12 +403,14 @@ class VoltroViewModel(application: Application) : AndroidViewModel(application) 
         val report = TripRecord(driving.tripId, comparison.destination.name, driving.activeRoute.label,
             driving.startedAt, System.currentTimeMillis(), driving.distanceKm, driving.elapsedMinutes,
             driving.initialRoute.energyKwh, driving.consumedKwh, snapshot.vehicle.socPercent, finalSoc,
-            remote = comparison.remote, routeSource = if (comparison.roadNetwork) "OSRM" else "MOCK")
+            remote = comparison.remote, routeSource = if (comparison.roadNetwork) "OSRM" else "MOCK",
+            initialDurationMinutes = driving.initialRoute.durationMinutes, vehicleSource = snapshot.vehicle.source.name)
         mutable.update { it.copy(busy = true, driving = null, screen = Screen.REPORT, report = report, error = null, message = null) }
         try {
             withContext(Dispatchers.IO) { store.save(report) }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { mutable.update { it.copy(busy = false, error = "주행은 완료했지만 기기 저장에 실패했습니다. 리포트 저장을 다시 시도하세요.") }; return }
+        checkpoint()
         mutable.update { it.copy(busy = false) }
         refreshHistory()
         if (report.remote) syncReport()

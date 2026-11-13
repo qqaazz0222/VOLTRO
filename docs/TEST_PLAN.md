@@ -16,7 +16,16 @@
 
 실행 명령은 README를 참조한다. 로컬 서버 검사는 `--backend`, 공개 도로 서비스 검사는 `--roads`, Pleos 가이드 촬영은 `--capture-guide`를 명시한다. 기본 모음은 네트워크 없이 실행한다.
 
-## 확인된 결과
+## 1.2.0 검증 (2026-11-13)
+
+- Python **26개 통과**, Kotlin JVM **18개 통과**(출발 SOC·부족 에너지·완충 도달 여부·전비 저하 민감도 4개 추가).
+- 일반 Android API 37에서 오프라인 **8개 통과** 및 공개 도로 통합 **1개 통과**. Pleos Connect 2.1.0에서도 오프라인 **8개 통과**, 큰 글자·버튼 **1개 통과**, Vehicle SDK 직접 읽기 **1개 통과**.
+- 신규 자동 검사는 세 시나리오 준비 시 저장 프로필 보존, 중단 체크포인트의 미결 승인·중복 안내 상태 보존, 항상 일시정지 복구, 손상 파일의 안전한 제거, 완료 이력 우선 처리와 멱등 저장을 검사한다. 경로 변경 실패 후 정지와 기존 경로 유지, 완료·취소 후 다음 여정 활성화 전에 체크포인트가 제거되는지도 확인한다.
+- `assembleRelease`, `testDebugUnitTest`, `lintDebug` 성공. lint error **0**, warning **32**(기존 SDK 권장·View 할당·리소스 등 권장 사항 포함). warning을 해소 완료로 집계하지 않는다.
+- Pleos native 화면 4개를 직접 확인해 리포트 구분선 높이와 잔량 부족 안내 대비를 보완했다. [촬영 출처](submission/screenshots/CAPTURE_INFO.json)는 test fixture와 실제 SDK·실차 측정을 구분한다.
+- signed release의 실제 강제 종료·재실행·명시적 복구·승인·완료와 잔량 부족·전환 실패는 `scripts/check_contest_release.py`로 별도 검증한다. 최종 APK와 검사 결과의 해시는 [출품 검토 자료](submission/README.md)에 기록한다.
+
+## 기존 1.0/1.1 확인된 결과
 
 - Python: **26 tests passed**.
 - Android JVM: **14 tests passed** (기존 8개와 실도로 geometry·거리·시간·좌표 검증 6개).

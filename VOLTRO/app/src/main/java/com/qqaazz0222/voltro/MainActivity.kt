@@ -29,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.qqaazz0222.voltro.domain.model.*
 import com.qqaazz0222.voltro.domain.usecase.metrics
+import com.qqaazz0222.voltro.domain.usecase.insights
 import com.qqaazz0222.voltro.presentation.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -108,7 +109,7 @@ class MainActivity : ComponentActivity() {
             Screen.HISTORY -> history(body, state)
         }
         when (state.screen) {
-            Screen.HOME -> root.addView(button(if (state.busy) "분석 중…" else "경로 분석하기  →", primary = true, enabled = !state.busy) {
+            Screen.HOME -> root.addView(button(if (state.busy) "분석 중…" else "경로 분석하기  →", primary = true, enabled = !state.busy && !state.recoveryAvailable) {
                 hideKeyboard(); if (state.serverMode) withServerAccess { vm.analyze(query) } else vm.analyze(query)
             }.apply { id = R.id.analyze_routes })
             Screen.COMPARISON -> root.addView(button(if (state.busy) "처리 중…" else if (state.comparison?.roadNetwork == true) "선택한 경로로 주행 재생  →" else "선택한 경로로 Mock 주행  →", true,
@@ -155,11 +156,19 @@ class MainActivity : ComponentActivity() {
             background = shape(if (state.error != null) design.warningSurface else panel, 12)
             setPadding(dp(14), dp(8), dp(6), dp(8))
             addView(text(message, 18f, if (state.error != null) design.warning else white), LinearLayout.LayoutParams(0, -2, 1f))
-            addView(button("닫기") { vm.clearNotice() }, LinearLayout.LayoutParams(dp(60), dp(48)))
+            addView(button("닫기") { vm.clearNotice() }, LinearLayout.LayoutParams(dp(if (wide) 112 else 80), dp(64)))
         }
     }
 
     private fun home(body: LinearLayout, state: AppState) {
+        if (state.recoveryAvailable) body.addView(card().apply {
+            addView(text("중단된 주행 재생이 있습니다", 24f, white, true), margin(bottom = 8))
+            addView(text("마지막 저장 지점과 당시 입력값을 복구합니다. 복구 후에는 일시정지 상태로 시작합니다. 기록은 24시간 동안만 유효합니다.", 14f, muted), margin(bottom = 12))
+            addView(row().apply {
+                addView(button("이전 재생 복구", true, !state.busy) { vm.restoreDriving() }.apply { id = R.id.restore_replay }, LinearLayout.LayoutParams(0, -2, 1f))
+                addView(button("복구 기록 삭제", enabled = !state.busy) { vm.discardRecovery() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(12) })
+            })
+        }, margin(bottom = 18))
         body.addView(text("에너지 경로 도우미", 18f, muted))
         body.addView(text("시간과 배터리를 함께 비교하세요", if (wide) 36f else 28f, white, true), margin(bottom = 12, top = 8))
         body.addView(row().apply {
@@ -229,6 +238,8 @@ class MainActivity : ComponentActivity() {
         vehicle.addView(button(if (state.busy) "처리 중…" else "Pleos 차량 상태 읽기", enabled = !state.busy) { vm.readPleosVehicle() }, margin(top = 16))
         addPanels(content, planning, vehicle)
         body.addView(content)
+        body.addView(button("심사 시연 시나리오", enabled = !state.busy && !state.recoveryAvailable) { demoScenarios() }
+            .apply { id = R.id.contest_demo }, margin(top = 16))
         if (state.comparison != null) body.addView(button("마지막 경로 분석 보기", enabled = !state.busy) { vm.previousComparison() }, margin(top = 16))
         body.addView(text("YOUR ROUTE. YOUR ENERGY.", 10f, muted, true).apply { letterSpacing = .18f }, margin(top = 22))
     }
@@ -248,6 +259,11 @@ class MainActivity : ComponentActivity() {
         if (comparison.roadNetwork && comparison.routes.size == 1) visual.addView(text("이 구간에는 제공된 경로가 1개입니다. 대안 경로는 생성하지 않았습니다.", 14f, muted), margin(bottom = 10))
         val fastest = comparison.routes.minBy { it.durationMinutes }
         val selected = comparison.routes.firstOrNull { it.id == state.selectedId }
+        val recommended = comparison.routes.firstOrNull { it.id == comparison.recommendedId }
+        visual.addView(text("추천의 근거", 20f, white, true), margin(top = 8, bottom = 8))
+        visual.addView(text(if (recommended == null) "최소 도착 잔량·허용 추가 시간·절약량 기준을 모두 만족하는 추천이 없습니다."
+            else if (recommended.id == fastest.id) "현재 조건에서 빠른 경로를 추천합니다. 허용 시간 안에서 최소 절약량을 충족하는 더 효율적인 대안이 없습니다."
+            else "빠른 경로보다 ${f(fastest.energyKwh - recommended.energyKwh)} kWh 적게 소비하고 ${f(recommended.durationMinutes - fastest.durationMinutes, 0)}분 추가됩니다. 도착 잔량 ${f(recommended.arrivalSoc)}%로 최소 ${f(state.preferences.minArrivalSoc, 0)}%를 충족합니다.", 14f, muted), margin(bottom = 14))
         val saving = selected?.let { fastest.energyKwh - it.energyKwh } ?: 0.0
         if (selected != null && saving > 0.001) {
             visual.addView(text("${f(saving)} kWh 덜 쓰는 여정", 24f, accent, true), margin(bottom = 6))
@@ -261,7 +277,7 @@ class MainActivity : ComponentActivity() {
             val active = state.selectedId == route.id
             val option = card().apply {
                 background = RippleDrawable(ColorStateList.valueOf(design.ripple), shape(if (active) design.selected else panel, 16, if (active) accent else line), null)
-                alpha = if (safe) 1f else .55f; isClickable = safe; isFocusable = safe; contentDescription = "${route.label} 선택"
+                isClickable = safe; isFocusable = safe; contentDescription = "${route.label} 선택"
                 if (safe) setOnClickListener { vm.selectRoute(route.id) }
             }
             option.addView(row().apply {
@@ -273,10 +289,19 @@ class MainActivity : ComponentActivity() {
                 addView(text("${f(route.energyKwh)} kWh", if (wide) 32f else 24f, if (active) accent else white, true))
             }, margin(bottom = 8))
             option.addView(text("${f(route.distanceKm)} km   ·   도착 ${f(route.arrivalSoc)}%   ·   ${route.roadName}", 13f, muted))
-            if (!safe) option.addView(text("최소 도착 잔량 미달 · 선택 불가", 18f, design.warning), margin(top = 6))
+            val insight = route.insights(state.vehicle, state.preferences, fastest)
+            if (!safe) {
+                option.addView(text("최소 도착 잔량 미달 · 선택 불가", 18f, design.warning), margin(top = 8))
+                option.addView(text(if (insight.reachableWithFullBattery)
+                    "출발 SOC 최소 ${f(ceil(insight.requiredDepartureSoc * 10) / 10)}% 필요 · 배터리 에너지 ${f(ceil(insight.additionalChargeKwh * 10) / 10)} kWh 추가 필요"
+                    else "완충해도 최소 잔량을 확보할 수 없습니다. 중간 충전 계획이 필요합니다.", 14f, white), margin(top = 8))
+            } else option.addView(text("최소 잔량 대비 +${f(insight.reserveMarginSoc)}%p 여유", 14f, accent), margin(top = 8))
+            option.addView(text("전비 20% 저하 가정 → 도착 ${f(insight.lowerEfficiencyArrivalSoc)}%${if (insight.lowerEfficiencyArrivalSoc < state.preferences.minArrivalSoc) " · 최소 잔량 미달" else ""}",
+                14f, if (insight.lowerEfficiencyArrivalSoc < state.preferences.minArrivalSoc) design.warning else muted), margin(top = 8))
             choices.addView(option, margin(bottom = 10))
         }
         addPanels(content, visual, choices); body.addView(content)
+        body.addView(text("계산: 거리 ÷ 전비 = 소비량, 출발 SOC − 소비량 ÷ 용량 × 100 = 도착 SOC. 전비 20% 저하는 비교용 가정이며 통계적 오차 범위가 아닙니다. 추가 에너지는 배터리 기준이며 충전 손실·충전소 경유는 계산하지 않습니다.", 13f, muted), margin(top = 12))
         body.addView(button("← 목적지 다시 선택", enabled = !state.busy) { vm.home() }, margin(top = 12))
     }
 
@@ -325,7 +350,7 @@ class MainActivity : ComponentActivity() {
         }
         body.addView(content, margin(top = if (d.advice != null) 16 else 0))
         body.addView(row().apply {
-            addView(button(if (d.paused) "데모 계속" else "일시정지", enabled = !state.busy) { vm.togglePause() }, LinearLayout.LayoutParams(0, dp(64), 1f))
+            addView(button(if (d.paused) "데모 계속" else "일시정지", enabled = !state.busy && d.advice == null) { vm.togglePause() }, LinearLayout.LayoutParams(0, dp(64), 1f))
             addView(button("배속 ${d.speed}×", enabled = !state.busy) { vm.changeSpeed() }, LinearLayout.LayoutParams(0, dp(64), 1f).apply { marginStart = dp(10) })
             addView(button("주행 취소", enabled = !state.busy) { confirmStop() }, LinearLayout.LayoutParams(0, dp(64), 1f).apply { marginStart = dp(10) })
         }, margin(top = 16))
@@ -353,6 +378,15 @@ class MainActivity : ComponentActivity() {
                 addView(text(label, 15f, muted), LinearLayout.LayoutParams(0, -2, 1f))
                 addView(text(value, if (wide) 16f else 13f, white, true))
             }, margin(top = 18))
+        }
+        if (report.initialDurationMinutes != null) {
+            summary.addView(divider(), LinearLayout.LayoutParams(-1, dp(1)).apply { topMargin = dp(20); bottomMargin = dp(16) })
+            val saved = report.estimatedEnergyKwh - report.simulatedEnergyKwh
+            val extra = report.durationMinutes - report.initialDurationMinutes
+            summary.addView(text("출발 경로 대비 계산상 변화", 20f, white, true), margin(bottom = 8))
+            summary.addView(text(if (saved > .001) "${f(saved)} kWh 감소 · ${f(extra, 0)}분 ${if (extra >= 0) "추가" else "변화"}"
+                else "경로 변경에 따른 소비량 감소 없음", 24f, accent, true), margin(bottom = 8))
+            summary.addView(text("SOC 입력: ${when (report.vehicleSource) { "PLEOS" -> "Pleos 스냅샷"; "MOCK" -> "데모 설정"; "USER_INPUT" -> "사용자 입력"; else -> "이전 버전 기록" }} · 소비량은 재생 계산값", 14f, muted))
         }
         body.addView(summary)
         body.addView(text("경로 변경 시 출발 예측과 완료 경로가 달라질 수 있습니다. 이 차이는 예측 정확도나 실차 절약 성능을 뜻하지 않습니다.", 13f, muted), margin(top = 16, bottom = 12))
@@ -387,6 +421,23 @@ class MainActivity : ComponentActivity() {
                 .setMessage("이 기기의 기록을 모두 삭제합니다. 개발 서버의 기록은 별도로 관리됩니다.")
                 .setNegativeButton("취소", null).setPositiveButton("삭제") { _, _ -> vm.deleteHistory() }.show())
         })
+    }
+
+    private fun demoScenarios() {
+        val options = arrayOf("절전 전환 · 약 2.9 kWh 절약", "배터리 부족 · 출발 차단", "경로 변경 실패 · 기존 경로 유지")
+        val scenarios = DemoScenario.entries
+        readableDialog(AlertDialog.Builder(this).setCustomTitle(dialogTitle("심사 시연 시나리오"))
+            .setAdapter(object : ArrayAdapter<String>(this, android.R.layout.select_dialog_item, options) {
+                override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View =
+                    (super.getView(position, convertView, parent) as TextView).apply {
+                        textSize = if (wide) 22f else 18f; typeface = design.font
+                        minHeight = dp(80); setTextColor(white)
+                    }
+            }) { _, index ->
+                readableDialog(AlertDialog.Builder(this).setCustomTitle(dialogTitle(options[index]))
+                    .setMessage("강릉역 합성 경로와 데모 차량값을 적용합니다. 저장된 차량 설정과 완료 이력은 유지됩니다. 비교 화면에서 선택 경로를 확인하고 주행을 시작하세요.")
+                    .setNegativeButton("취소", null).setPositiveButton("시나리오 준비") { _, _ -> query = "강릉역"; vm.prepareDemo(scenarios[index]) }.show())
+            }.setNegativeButton("닫기", null).show())
     }
 
     private fun settings(state: AppState) {

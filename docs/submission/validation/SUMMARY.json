@@ -1,0 +1,38 @@
+{
+  "date_kst": "2026-11-13",
+  "version": "1.2.0-mvp",
+  "python_tests": 26,
+  "kotlin_jvm_tests": 18,
+  "pleos_offline_tests": 8,
+  "pleos_layout_tests": 1,
+  "pleos_vehicle_sdk_tests": 1,
+  "android_live_roads_tests": 1,
+  "lint_errors": 0,
+  "lint_warnings": 32,
+  "signed_release_ui": {
+    "status": "PASSED",
+    "apk_sha256": "0371726acdffeda1828dbf568cc7143bc8fea35509e4630e7b2e48505479ed4e",
+    "device": "emulator-5554",
+    "api": "37",
+    "checks": [
+      "saving scenario and recommendation rationale",
+      "force-stop, relaunch, explicit recovery paused at pending decision",
+      "approved switch and report: 2.9 kWh less, 15 extra minutes",
+      "low SOC blocks start and explains required departure charge",
+      "failed route change preserves original route",
+      "explicit cancellation returns Home"
+    ],
+    "video": "demo.mp4"
+  },
+  "video_sha256": "d917d8e175af5d06dff264ff626d962c2047d346b3caa6bc60e8e424874538a2",
+  "scope": "Emulator/demo validation only. No physical vehicle accuracy, GPS navigation or Market certification.",
+  "logs": {
+    "android-roads.txt": "e6c612935dbebde2c6b613a3adfa4836d64b5425f6daad95856635f58050eff4",
+    "backend.txt": "d2b5ebe1c36e01f8dda76d9fb79404c4a16245c289b9510e28b9f324d2f6b5bd",
+    "build-lint-unit.txt": "b8d05930e99578152093af452330f2f0f6cfe0e37017490e7a28e97266f1d185",
+    "pleos-layout.txt": "28420c7eb7daceff62d800d1a2f2814eb3928f0b2006afa0cab15a41eb797762",
+    "pleos-sdk.txt": "199c5d01e5d679eb349c275124cfe32afb4613426368dc1b427b73eec154f713",
+    "pleos-suite.txt": "868b838150a815d098c133b38ceb910cef3bc1ba5489d8a2a9c7ecf648e85290",
+    "release-ui.txt": "4054b4acdf1f315eaefa975175e5dfabc81a868775b3d52dd09de6bf1f2a8cba"
+  }
+}

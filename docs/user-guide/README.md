@@ -9,7 +9,7 @@
 
 기준 버전은 **1.1.0-mvp / versionCode 4**, 작성일은 **2026년 11월 12일**입니다. 모든 이미지는 Pleos Connect 2.1.0 / Android 14(API 34), 2560×1440px / 160dpi 환경에서 촬영했습니다. 전체 화면 2개는 시스템 UI를 포함하며, 앱 창 8개는 Android PixelCopy로 실제 창의 GPU 픽셀을 직접 캡처한 1682×1210px 원본입니다. 이미지에 합성 UI를 넣거나 촬영 후 잘라내지 않았습니다.
 
-촬영은 같은 앱 소스의 개발 빌드로 진행했습니다. 캡처된 APK의 SHA-256과 정확한 소스 커밋은 `CAPTURE_INFO.json`에 있습니다. [서명된 release APK](../../apk/VOLTRO_VOLTRO_release.apk)는 같은 사용자 흐름을 제공하며 개발 HTTP 서버 항목은 비활성화됩니다.
+촬영은 같은 앱 소스의 개발 빌드로 진행했습니다. 캡처된 APK의 SHA-256과 정확한 소스 커밋은 `CAPTURE_INFO.json`에 있습니다. [서명된 release APK](../../apk/archive/1.1.0/VOLTRO_VOLTRO_release.apk)는 같은 사용자 흐름을 제공하며 개발 HTTP 서버 항목은 비활성화됩니다.
 
 실제 도로 페이지는 OSM 지도와 OSRM 응답을 사용합니다. SOC 100%는 실제 Pleos 에뮬레이터 SDK 응답이며, 전비 5.2와 용량 70은 설정값입니다. 주행은 도로 좌표 재생으로, 실차 GPS·소비량 계측을 뜻하지 않습니다. 분기점 알림 페이지의 2.9kWh·15분 수치는 별도 오프라인 합성 데모입니다.
 
@@ -38,3 +38,5 @@ python scripts/build_user_guide.py
 생성된 DOCX를 LibreOffice 또는 Word에서 PDF로 내보냅니다. 배포 파일은 LibreOffice 26.8.2로 변환하고 12페이지 전체를 이미지로 렌더링해 한글·지도·표·페이지 배치를 확인했습니다. Asta Sans regular/bold를 DOCX에 포함했으며 [OFL 라이선스](../../licenses/AstaSans-OFL.txt)를 보존합니다. 임시 글꼴과 검토 이미지는 Git에서 제외한 `artifacts/`에 저장합니다.
 
 지도 데이터: [© OpenStreetMap contributors / ODbL](https://www.openstreetmap.org/copyright). 경로: [OSRM](https://routing.openstreetmap.de/about.html). 공급자·캐시·요청 제한은 [실제 지도 연동](../REAL_MAPS.md)을 참고하세요.
+
+1.2.0 신규 시나리오·복구·설명 화면과 영상은 [출품 자료](../submission/README.md)에 제공한다. 이 가이드 생성 스크립트는 캡처 해시와 일치하는 보관 release 메타데이터를 선택하며 최신 APK 버전으로 임의 표시하지 않는다.

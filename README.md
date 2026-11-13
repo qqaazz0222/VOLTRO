@@ -2,11 +2,22 @@
 
 Your Route. Your Energy.
 
+## 1.2.0 출품 검토 버전 (2026-11-13)
+
+[신규 signed release APK](apk/VOLTRO_VOLTRO_release.apk) · [기획 원고·시연 대본·검토 안내](docs/submission/README.md) · [APK 버전·소스 커밋·서명](apk/VOLTRO_VOLTRO_release.json)
+
+- Home의 **심사 시연 시나리오**에서 절전 전환·잔량 부족·경로 변경 실패를 준비한다. 데모 입력은 저장된 프로필과 완료 이력을 바꾸지 않는다.
+- 비교 화면에 추천 근거·최소 잔량 여유·전비 20% 저하 가정과 잔량 부족 시 최소 출발 SOC·추가 배터리 에너지를 표시한다. 저하 가정은 통계적 오차 범위가 아니다.
+- 재생 중 프로세스가 종료되면 Home의 **이전 재생 복구**로 마지막 체크포인트를 불러온다. 복구 후에는 항상 일시정지하며 분기점 승인도 보존한다. 24시간 유효한 기기 내 임시 기록이다.
+- 경로 변경 실패는 기존 경로를 유지하고 재생을 정지한다. 완료 리포트는 출발 경로 대비 계산상 에너지·시간 변화를 표시한다.
+
+로컬 `codex/contest-readiness-1.2` 브랜치에서 구현과 제출 산출물을 분리해 커밋한다. 최신 APK의 정확한 앱 소스 커밋·SHA-256·서명은 JSON에 기록한다. 원격 푸시·공개 설정 변경·접수는 진행하지 않는다. 기존 1.1.0 배포본은 [보관 폴더](apk/archive/1.1.0/)에 보존했으며 기존 사용자 가이드는 해당 버전 기준이다.
+
 전기차의 SOC와 전비로 경로별 예상 소비량·도착 잔량을 비교하고 분기점의 에너지 절약 효과를 안내하는 Pleos용 주행 의사결정 보조 앱입니다. OpenStreetMap 실제 지도와 OSRM 도로 경로를 연결하며, 주행은 도로 좌표 재생입니다. 차량 SOC·전비는 선택적으로 공식 Vehicle SDK에서 읽을 수 있습니다.
 
-**공모전 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
+**기존 1.1.0 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/archive/1.1.0/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/archive/1.1.0/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
 
-**실제 Pleos 화면 10개를 담은 12쪽 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
+**기존 1.1.0의 실제 Pleos 화면 10개를 담은 12쪽 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
 
 **로고와 앱 아이콘:** [브랜드 자산 및 SVG·PNG](design/brand/README.md).
 
@@ -84,10 +95,10 @@ JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradle
 저장소 루트에서 에뮬레이터를 켠 상태로:
 
 ```sh
-# 서버 없이 Mock 여정·저장·안전 조건·색상 대비 검사 (4 tests)
+# 서버 없이 Mock 여정·저장·안전 조건·색상 대비 검사 (8 tests)
 python3 scripts/check_android.py --serial emulator-5554
 
-# FastAPI가 실행 중일 때 서버 왕복까지 포함 (5 tests)
+# FastAPI가 실행 중일 때 서버 왕복까지 포함 (9 tests)
 python3 scripts/check_android.py --serial emulator-5554 --backend
 
 # Pleos Vehicle Service가 있는 에뮬레이터에서 SDK 읽기만 검사 (1 test)
@@ -115,7 +126,7 @@ Mock 차량 조회, 목적지 선택, 3개 후보 경로 비교, baseline 예측
 
 Pleos에서 APK 재설치 직후 SDK capability 응답 timeout도 관찰했다. cold boot 후 읽기는 성공했으며, 연결 안정성과 실차 동작은 추가 검증이 필요하다. timeout을 mock 성공값으로 바꾸지 않는다.
 
-**OSM 지도·OSRM 도로 경로를 연결했으며 Pleos 위치·내비·TTS는 미연동**이다. 도로 경로 모드도 주행 위치와 소비량은 재생·추정값이다. 별도 오프라인 모드에는 합성 경로를 유지한다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스가 종료되면 진행 중인 주행을 복원하지 않으며 완료된 이력만 유지한다.
+**OSM 지도·OSRM 도로 경로를 연결했으며 Pleos 위치·내비·TTS는 미연동**이다. 도로 경로 모드도 주행 위치와 소비량은 재생·추정값이다. 별도 오프라인 모드에는 합성 경로를 유지한다. 실측 소비량과 예측 정확도는 제공하지 않는다. 프로세스 종료 후 재생은 마지막 체크포인트에서 명시적으로 복구할 수 있다. 실시간 차량 주행 세션 복구가 아닌 시연 재생 복구다.
 
 개발용 APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.
 

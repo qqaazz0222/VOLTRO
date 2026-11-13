@@ -1,0 +1,39 @@
+{
+  "date_kst": "2026-11-13",
+  "emulator": "Pleos Connect 2.1.0 / Android 14 API 34",
+  "build_type": "debug",
+  "version": "1.2.0-mvp",
+  "debug_apk_sha256": "ea807a612d2e21b96f43d117b533cec89518e087e7cbdb82432bf61f251afd2b",
+  "capture_method": "Instrumentation UiAutomation.takeScreenshot, full native display; no crop, resize or compositing",
+  "inputs": "Comparison and low SOC use the actual offline scenario; recovery and report use deterministic persisted test fixtures. Not real vehicle measurements.",
+  "files": {
+    "pleos-comparison.png": {
+      "sha256": "7737076be51857a641d9d1b0b58257db1381afaefa33e171a40eb9547585daa7",
+      "native_size": [
+        2560,
+        1440
+      ]
+    },
+    "pleos-low-soc.png": {
+      "sha256": "47093fd0a1fdf05d79499bf3fe54094a5c172a4aa72e381a6d8f6722b1487472",
+      "native_size": [
+        2560,
+        1440
+      ]
+    },
+    "pleos-recovery.png": {
+      "sha256": "d34f390650c45cf140123e753e417280666ae3f386d9a1073c213a1d32c6d820",
+      "native_size": [
+        2560,
+        1440
+      ]
+    },
+    "pleos-report.png": {
+      "sha256": "512640668e81b7ca54dd47f67bcd4a8df1dfd91414c95376cbb78f308cca4085",
+      "native_size": [
+        2560,
+        1440
+      ]
+    }
+  }
+}

@@ -17,8 +17,13 @@ class TripStore(context: Context) : SQLiteOpenHelper(context, "voltro.db", null,
         val values = ContentValues().apply {
             put("id", record.id); put("ended_at", record.endedAt); put("data", record.json().toString())
         }
-        writableDatabase.insertWithOnConflict("trips", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-        writableDatabase.execSQL("DELETE FROM trips WHERE id NOT IN (SELECT id FROM trips ORDER BY ended_at DESC LIMIT 50)")
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            check(db.insertWithOnConflict("trips", null, values, SQLiteDatabase.CONFLICT_REPLACE) != -1L) { "Trip insert failed" }
+            db.execSQL("DELETE FROM trips WHERE id NOT IN (SELECT id FROM trips ORDER BY ended_at DESC LIMIT 50)")
+            db.setTransactionSuccessful()
+        } finally { db.endTransaction() }
     }
     fun recent(): List<TripRecord> = readableDatabase.query("trips", arrayOf("data"), null, null, null, null,
         "ended_at DESC", "50").use { cursor ->
@@ -31,8 +36,10 @@ fun TripRecord.json() = JSONObject().put("id", id).put("destination", destinatio
     .put("startedAt", startedAt).put("endedAt", endedAt).put("distanceKm", distanceKm).put("durationMinutes", durationMinutes)
     .put("estimatedEnergyKwh", estimatedEnergyKwh).put("simulatedEnergyKwh", simulatedEnergyKwh)
     .put("initialSoc", initialSoc).put("finalSoc", finalSoc).put("remote", remote).put("synced", synced).put("routeSource", routeSource)
+    .put("initialDurationMinutes", initialDurationMinutes ?: JSONObject.NULL).put("vehicleSource", vehicleSource)
 
 private fun JSONObject.record() = TripRecord(getString("id"), getString("destination"), getString("routeLabel"),
     getLong("startedAt"), getLong("endedAt"), getDouble("distanceKm"), getDouble("durationMinutes"),
     getDouble("estimatedEnergyKwh"), getDouble("simulatedEnergyKwh"), getDouble("initialSoc"), getDouble("finalSoc"),
-    optBoolean("remote"), optBoolean("synced"), optString("routeSource", "MOCK"))
+    optBoolean("remote"), optBoolean("synced"), optString("routeSource", "MOCK"), if (isNull("initialDurationMinutes")) null else getDouble("initialDurationMinutes"),
+    optString("vehicleSource", "UNKNOWN"))

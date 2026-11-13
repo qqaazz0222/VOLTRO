@@ -1,0 +1,15 @@
+{
+  "status": "PASSED",
+  "apk_sha256": "0371726acdffeda1828dbf568cc7143bc8fea35509e4630e7b2e48505479ed4e",
+  "device": "emulator-5554",
+  "api": "37",
+  "checks": [
+    "saving scenario and recommendation rationale",
+    "force-stop, relaunch, explicit recovery paused at pending decision",
+    "approved switch and report: 2.9 kWh less, 15 extra minutes",
+    "low SOC blocks start and explains required departure charge",
+    "failed route change preserves original route",
+    "explicit cancellation returns Home"
+  ],
+  "video": "demo.mp4"
+}

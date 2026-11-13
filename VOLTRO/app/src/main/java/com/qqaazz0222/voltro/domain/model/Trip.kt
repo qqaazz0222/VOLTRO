@@ -21,4 +21,5 @@ data class TripRecord(
     val estimatedEnergyKwh: Double, val simulatedEnergyKwh: Double,
     val initialSoc: Double, val finalSoc: Double, val remote: Boolean = false, val synced: Boolean = false,
     val routeSource: String = "MOCK",
+    val initialDurationMinutes: Double? = null, val vehicleSource: String = "UNKNOWN",
 )

@@ -13,8 +13,8 @@ android {
         applicationId = "com.qqaazz0222.voltro"
         minSdk = 28
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.1.0-mvp"
+        versionCode = 5
+        versionName = "1.2.0-mvp"
         resValue("string", "routing_base_url", providers.gradleProperty("voltroRoutingUrl").getOrElse("https://router.project-osrm.org"))
         resValue("string", "map_tile_template", providers.gradleProperty("voltroTileUrl").getOrElse("https://tile.openstreetmap.org/{z}/{x}/{y}.png"))
 

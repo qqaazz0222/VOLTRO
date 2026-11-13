@@ -27,7 +27,7 @@ subprocess.run(["./gradlew", ":app:assembleDebug", ":app:assembleDebugAndroidTes
                cwd=ROOT / "VOLTRO", env=env, check=True)
 for apk in ["debug/app-debug.apk", "androidTest/debug/app-debug-androidTest.apk"]:
     subprocess.run([adb, "-s", args.serial, "install", "-r", "-g", str(ROOT / "VOLTRO/app/build/outputs/apk" / apk)], check=True)
-classes = ["com.qqaazz0222.voltro.MockJourneyTest", "com.qqaazz0222.voltro.DesignContrastTest"]
+classes = ["com.qqaazz0222.voltro.MockJourneyTest", "com.qqaazz0222.voltro.DesignContrastTest", "com.qqaazz0222.voltro.ContestReadinessTest"]
 if args.backend:
     classes.append("com.qqaazz0222.voltro.BackendJourneyTest")
 if args.pleos_vehicle:
@@ -48,7 +48,7 @@ artifacts.mkdir(exist_ok=True)
 report = artifacts / f"instrumentation-{args.serial}.txt"
 report.write_text(output)
 print(output)
-expected = 1 if args.pleos_vehicle or args.roads or args.pleos_layout or args.capture_guide else (5 if args.backend else 4)
+expected = 1 if args.pleos_vehicle or args.roads or args.pleos_layout or args.capture_guide else (9 if args.backend else 8)
 match = re.search(r"OK \((\d+) tests?\)", output)
 if result.returncode or not match or int(match[1]) != expected or "FAILURES!!!" in output:
     sys.exit(f"Android tests failed or did not run; inspect {report}")

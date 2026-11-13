@@ -10,14 +10,19 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import android.os.SystemClock
 import com.qqaazz0222.voltro.data.local.TripStore
+import com.qqaazz0222.voltro.data.local.DrivingSessionStore
 import com.qqaazz0222.voltro.domain.model.RouteType
 import com.qqaazz0222.voltro.presentation.*
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MockJourneyTest {
+    @Before fun resetOnlyReplayCheckpoint() {
+        DrivingSessionStore(InstrumentationRegistry.getInstrumentation().targetContext).clear()
+    }
     private fun await(timeout: Long = 30000, condition: () -> Boolean) {
         val end = SystemClock.elapsedRealtime() + timeout
         while (!condition() && SystemClock.elapsedRealtime() < end) SystemClock.sleep(50)
@@ -54,6 +59,7 @@ class MockJourneyTest {
             assertEquals(165.0 / 5.2, report.simulatedEnergyKwh, .000001)
             assertEquals(145.0, report.durationMinutes, .000001)
             assertFalse(report.remote)
+            assertFalse("Completed replay must be cleared before the next journey is enabled", DrivingSessionStore(InstrumentationRegistry.getInstrumentation().targetContext).exists())
             onView(withText("SIMULATED TRIP")).check(matches(isDisplayed()))
             TripStore(InstrumentationRegistry.getInstrumentation().targetContext).use { store ->
                 assertTrue(store.recent().any { it.id == report.id })
@@ -76,9 +82,11 @@ class MockJourneyTest {
             await { vm.state.value.error != null && !vm.state.value.busy }
             assertEquals(RouteType.FASTEST, vm.state.value.driving!!.activeRoute.type)
             assertNull(vm.state.value.driving!!.advice)
+            assertTrue("Failed route change must pause for explicit continuation", vm.state.value.driving!!.paused)
             val tripId = vm.state.value.driving!!.tripId
             scenario.onActivity { vm.stopDriving() }
-            assertEquals(Screen.HOME, vm.state.value.screen)
+            await { vm.state.value.screen == Screen.HOME && !vm.state.value.busy }
+            assertFalse(DrivingSessionStore(InstrumentationRegistry.getInstrumentation().targetContext).exists())
             TripStore(InstrumentationRegistry.getInstrumentation().targetContext).use { store ->
                 assertFalse(store.recent().any { it.id == tripId })
             }

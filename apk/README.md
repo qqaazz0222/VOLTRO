@@ -18,3 +18,7 @@ python3 scripts/build_submission.py --team VOLTRO
 ```
 
 별도 서명키가 있으면 `VOLTRO_SIGNING_KEYSTORE`, `VOLTRO_SIGNING_ALIAS`, `VOLTRO_SIGNING_PASSWORD_FILE` 세 환경변수를 지정한다. 이 스크립트는 keystore와 private key의 암호가 같은 키를 지원한다. 암호 값 자체를 명령행이나 저장소에 넣지 않는다. 기존 키를 잃어버리면 같은 서명으로 업데이트할 수 없으므로 로컬 키는 본인이 안전하게 보관해야 한다.
+
+## 1.2.0 로컬 검토 빌드
+
+현재 신규 기능은 [VOLTRO_VOLTRO_release.apk](VOLTRO_VOLTRO_release.apk)에 제공하며 기존 1.1.0은 [보관 폴더](archive/1.1.0/)에 남겼다. 추후 미커밋 변경을 별도로 검토할 때만 `--review`를 사용한다. `python3 scripts/build_submission.py --team VOLTRO --review`는 미커밋 소스로 non-debuggable release를 빌드하고 zipalign·v3 서명을 검증한다. 기존 제출 APK는 보존한다. 미커밋인 경우 JSON의 `source_commit`은 `null`, `base_commit`은 기존 HEAD이며 별도 `sources.json`에 정확한 파일별 SHA-256을 기록한다. 빌드 중 소스가 달라지면 패키징을 중단한다. 검토가 끝나면 구현을 커밋하고 기본 명령으로 최종 제출 APK를 만든다. 상세한 [출품 검토 안내](../docs/submission/README.md)를 따른다.

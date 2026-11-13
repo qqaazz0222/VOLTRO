@@ -13,6 +13,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--team", default="VOLTRO", help="filename team label; replace with your registered team name")
+parser.add_argument("--review", action="store_true", help="build a local review release from uncommitted sources, with a hashed source manifest; does not replace the submitted APK")
 args = parser.parse_args()
 if not re.fullmatch(r"[\w-]{1,48}", args.team):
     parser.error("Team name must contain only letters, digits, underscores, or hyphens (max 48 characters).")
@@ -29,7 +30,7 @@ def run(command, **kwargs):
 
 dirty = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=all", "--",
     "VOLTRO", "mock-data", "licenses", "scripts"], cwd=ROOT, text=True).strip()
-if dirty:
+if dirty and not args.review:
     parser.error("Commit implementation and build scripts first so the APK has an exact source commit.")
 commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 sdk_env = env.get("ANDROID_HOME") or env.get("ANDROID_SDK_ROOT")
@@ -69,12 +70,23 @@ else:
     if not keystore.is_file() or not password_file.is_file():
         parser.error("Custom keystore and password file must exist.")
 
+def source_manifest_text():
+    paths = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--",
+        "VOLTRO", "mock-data", "licenses", "scripts", "backend"], cwd=ROOT, text=True).splitlines()
+    source_files = {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        for name in sorted(set(paths)) if (ROOT / name).is_file()}
+    return json.dumps(source_files, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+
+build_sources = source_manifest_text()
 run(["./gradlew", ":app:assembleRelease", "--console=plain"], cwd=ROOT / "VOLTRO")
+if source_manifest_text() != build_sources:
+    raise SystemExit("Source files changed while building; run again from a stable working tree.")
 unsigned = ROOT / "VOLTRO/app/build/outputs/apk/release/app-release-unsigned.apk"
 if not unsigned.is_file():
     raise SystemExit("Expected unsigned release APK was not generated.")
-output_dir = ROOT / "apk"
-output_dir.mkdir(exist_ok=True)
+output_dir = ROOT / "apk" / "review" if args.review else ROOT / "apk"
+output_dir.mkdir(parents=True, exist_ok=True)
 apk = output_dir / f"{args.team}_VOLTRO_release.apk"
 with tempfile.TemporaryDirectory(prefix="voltro-sign-") as temporary:
     aligned = Path(temporary) / "aligned.apk"
@@ -100,11 +112,19 @@ with tempfile.TemporaryDirectory(prefix="voltro-sign-") as temporary:
         raise SystemExit("No signing certificate fingerprint found.")
     apk.write_bytes(signed.read_bytes())
 
+source_manifest = build_sources if args.review else None
+if args.review:
+    apk.with_suffix(".sources.json").write_text(source_manifest)
+
 metadata = {"apk": apk.name, "application_id": package[1], "version_code": int(package[2]),
-    "version_name": package[3], "source_commit": commit, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
+    "version_name": package[3], "source_commit": None if dirty else commit, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
     "size_bytes": apk.stat().st_size, "certificate_sha256": fingerprint[1], "signing_identity": "local-contest-demo" if demo_key else "provided-key",
     "build_type": "release", "debuggable": False, "verified_signature_schemes": [3],
     "scope": "Real OSM/OSRM road route comparison and offline demo; simulated driving with optional Pleos Vehicle SDK snapshot; no GPS navigation or production certification"}
+if args.review:
+    metadata.update({"review_only": True, "base_commit": commit, "source_dirty": bool(dirty),
+        "source_manifest": apk.with_suffix(".sources.json").name,
+        "source_manifest_sha256": hashlib.sha256(source_manifest.encode()).hexdigest()})
 apk.with_suffix(".json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
 apk.with_suffix(".sha256").write_text(f"{metadata['sha256']}  {apk.name}\n")
 print(json.dumps(metadata, ensure_ascii=False, indent=2))

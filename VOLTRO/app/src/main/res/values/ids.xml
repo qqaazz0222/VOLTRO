@@ -4,4 +4,6 @@
     <item name="start_trip" type="id" />
     <item name="road_mode" type="id" />
     <item name="demo_mode" type="id" />
+    <item name="contest_demo" type="id" />
+    <item name="restore_replay" type="id" />
 </resources>
