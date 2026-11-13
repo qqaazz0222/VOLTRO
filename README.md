@@ -4,7 +4,7 @@ Your Route. Your Energy.
 
 ## 1.2.0 출품 검토 버전 (2026-11-13)
 
-[신규 signed release APK](apk/VOLTRO_VOLTRO_release.apk) · [기획 원고·시연 대본·검토 안내](docs/submission/README.md) · [APK 버전·소스 커밋·서명](apk/VOLTRO_VOLTRO_release.json)
+[신규 signed release APK](apk/VOLTRO_VOLTRO_release.apk) · [2분 30초 시연 영상](docs/submission/VOLTRO_Demo.mp4) · [기획 원고·시연 대본·검토 안내](docs/submission/README.md) · [APK 버전·소스 커밋·서명](apk/VOLTRO_VOLTRO_release.json)
 
 - Home의 **심사 시연 시나리오**에서 절전 전환·잔량 부족·경로 변경 실패를 준비한다. 데모 입력은 저장된 프로필과 완료 이력을 바꾸지 않는다.
 - 비교 화면에 추천 근거·최소 잔량 여유·전비 20% 저하 가정과 잔량 부족 시 최소 출발 SOC·추가 배터리 에너지를 표시한다. 저하 가정은 통계적 오차 범위가 아니다.

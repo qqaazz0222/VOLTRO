@@ -30,9 +30,12 @@
     "android-roads.txt": "e6c612935dbebde2c6b613a3adfa4836d64b5425f6daad95856635f58050eff4",
     "backend.txt": "d2b5ebe1c36e01f8dda76d9fb79404c4a16245c289b9510e28b9f324d2f6b5bd",
     "build-lint-unit.txt": "b8d05930e99578152093af452330f2f0f6cfe0e37017490e7a28e97266f1d185",
+    "package.txt": "582f340ea4f5924d67e58a6bd504927713ce13f9fbf26f1cca6824cef1a74fcf",
     "pleos-layout.txt": "28420c7eb7daceff62d800d1a2f2814eb3928f0b2006afa0cab15a41eb797762",
     "pleos-sdk.txt": "199c5d01e5d679eb349c275124cfe32afb4613426368dc1b427b73eec154f713",
     "pleos-suite.txt": "868b838150a815d098c133b38ceb910cef3bc1ba5489d8a2a9c7ecf648e85290",
     "release-ui.txt": "4054b4acdf1f315eaefa975175e5dfabc81a868775b3d52dd09de6bf1f2a8cba"
-  }
+  },
+  "source_commit": "66927c93e3e4a4b3acc202efe40d4a9e17974145",
+  "release_metadata": "../../../apk/VOLTRO_VOLTRO_release.json"
 }
