@@ -1,0 +1,10 @@
+{
+  "date_kst": "2026-11-13",
+  "file": "VOLTRO_Pleos_Demo_60s.mp4",
+  "sha256": "0b67265c092a20829d1d4b717559b7d5d4084fbd337bed09433ebff211d9dbe6",
+  "format": "1920x1080, 30 fps, H.264, silent, Korean on-screen captions",
+  "duration_seconds": 60.7,
+  "generator": "scripts/build_pleos_demo_video_60s.py",
+  "content": "Intro, problem, six Pleos Connect 2.1.0 / API 34 captures (docs/submission/screenshots 1.2.0 and docs/user-guide/screenshots 1.1.0) shown unmodified with pan/zoom only, technology and next steps, outro.",
+  "scope": "Still captures of the app running on the Pleos Connect emulator, not a continuous screen recording. Vehicle values and energy are simulator inputs and distance x efficiency estimates, not physical vehicle measurements."
+}

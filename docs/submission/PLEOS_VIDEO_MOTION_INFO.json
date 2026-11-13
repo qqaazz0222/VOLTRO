@@ -1,0 +1,10 @@
+{
+  "date_kst": "2026-11-13",
+  "file": "VOLTRO_Pleos_Demo_Motion.mp4",
+  "sha256": "cccd5bf656b2d5725c79c417af2bec4815b214c13226221f2639ab41f2e17dc3",
+  "format": "1920x1080, 30 fps, H.264, silent, Korean on-screen captions",
+  "duration_seconds": 62.1,
+  "generator": "scripts/build_pleos_demo_video_motion.py",
+  "content": "Intro, 13.6 s concept motion graphic (route comparison, junction prompt, low-SOC block) drawn from the Gangneung offline demo numbers, six Pleos Connect 2.1.0 / API 34 captures shown unmodified with pan/zoom only, technology and next steps, outro.",
+  "scope": "The motion graphic is an illustration, not app UI. Pleos scenes are still captures from the Pleos Connect emulator, not a continuous screen recording. Vehicle values and energy are simulator inputs and distance x efficiency estimates, not physical vehicle measurements."
+}

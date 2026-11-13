@@ -1,0 +1,10 @@
+{
+  "date_kst": "2026-11-13",
+  "file": "VOLTRO_Pleos_Demo_3D.mp4",
+  "sha256": "61acd6dbcb25f60abbe8503d27818aa194b69969920a0fe42328a9c0645b9b05",
+  "format": "1920x1080, 30 fps, H.264, silent, Korean on-screen captions",
+  "duration_seconds": 65.5,
+  "generator": "scripts/build_pleos_demo_video_3d.py (+ scripts/voltro_terrain3d.py)",
+  "content": "Animated intro, 15.4 s 3D terrain concept graphic (highway 180 km / 130 min / 34.6 kWh vs local road 165 km / 145 min / 31.7 kWh, junction prompt, low-SOC block) using the Gangneung offline demo numbers, six Pleos Connect 2.1.0 / API 34 captures shown unmodified with pan/zoom, highlight boxes and count-up figures, animated data-flow diagram, outro.",
+  "scope": "Energy in the graphic follows the app model (distance / efficiency, 5.2 km/kWh); terrain is decorative and elevation and traffic are not modelled, as stated on screen. Pleos scenes are still captures, not a continuous recording. Values are simulator inputs, not physical vehicle measurements."
+}
