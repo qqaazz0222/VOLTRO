@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--serial", required=True)
-parser.add_argument("--apk", type=Path, default=ROOT / "apk/VOLTRO_VOLTRO_release.apk")
+parser.add_argument("--apk", type=Path, default=ROOT / "apk/김현수_VOLTRO_release.apk")
 parser.add_argument("--roads", action="store_true", help="explicit live OSM/OSRM release journey instead of the offline regression")
 args = parser.parse_args()
 sdk = Path(os.environ.get("ANDROID_HOME", Path.home() / "Library/Android/sdk"))

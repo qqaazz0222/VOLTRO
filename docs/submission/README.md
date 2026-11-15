@@ -1,13 +1,13 @@
-# VOLTRO 1.2.0 출품 검토 자료
+# VOLTRO 1.2.0 출품 자료
 
-2026-11-13 KST. 사용 가능한 앱과 설명 자료를 검토하는 묶음이다. 외부 접수·저장소 공개 변경·개인정보 및 동의서 서명은 수행하지 않는다.
+2026-11-15 KST. 등록 팀명은 **김현수**, 앱 이름은 **VOLTRO**다. 소스 코드와 실행 가능한 release APK를 공개 GitHub 저장소에 함께 제공한다. 접수 메일 발송·접수 페이지 입력·참가자 동의서 서명은 참가자가 진행한다.
 
 ## 자료
 
 - [접수양식에 옮길 기획 원고](ENTRY_BRIEF.md): 고객 문제, 차량 가치, 기술, 사업 검증 목표, 현재 제약.
 - [3분 심사 시연 대본](DEMO_SCRIPT.md): 절전 전환·잔량 부족·전환 실패, 복구 보조 시연.
-- [1.2.0 검토용 signed release APK](../../apk/VOLTRO_VOLTRO_release.apk): 신규 기능이 포함된 non-debuggable 빌드.
-- [APK 메타데이터](../../apk/VOLTRO_VOLTRO_release.json): 정확한 앱 소스 커밋·SHA-256·서명 인증서 fingerprint.
+- [1.2.0 제출용 signed release APK](../../apk/김현수_VOLTRO_release.apk): 신규 기능이 포함된 non-debuggable 빌드.
+- [APK 메타데이터](../../apk/김현수_VOLTRO_release.json): 정확한 앱 소스 커밋·SHA-256·서명 인증서 fingerprint.
 - 기존 [Pleos 사용자 가이드](../user-guide/VOLTRO_User_Guide.pdf)는 1.1.0 화면 기준이다. 신규 기능은 이 문서와 시연 대본을 함께 확인한다.
 
 ## 1.2.0 시연 방법
@@ -24,14 +24,14 @@ Home → **심사 시연 시나리오**에서 다음을 선택한다. 적용 확
 
 ## 제출 빌드와 재생성
 
-현재 `apk/VOLTRO_VOLTRO_release.apk`는 1.2.0 signed release다. 기존 1.1.0은 [보관 폴더](../../apk/archive/1.1.0/)에 원본 메타데이터와 함께 남겼다. 로컬 `codex/contest-readiness-1.2` 브랜치에 소스·자료와 APK 산출물을 분리해 커밋한다. 메타데이터의 앱 소스 커밋과 접수 메일의 최종 제출 커밋(APK 포함)을 구분한다. 원격에는 푸시하지 않는다.
+현재 `apk/김현수_VOLTRO_release.apk`는 1.2.0 signed release다. 기존 1.1.0은 [보관 폴더](../../apk/archive/1.1.0/)에 원본 메타데이터와 함께 남겼다. 소스·자료와 APK 산출물을 `main`에 커밋·푸시하고 [제출 릴리즈](https://github.com/qqaazz0222/VOLTRO/releases/tag/v1.2.0-mvp-submission)의 태그로 고정한다. 메타데이터의 빌드 소스 커밋과 접수 메일의 최종 제출 커밋(APK 포함)을 구분한다.
 
 ```sh
 # 구현·스크립트가 커밋된 상태에서 재생성
-python3 scripts/build_submission.py --team 실제팀명
+python3 scripts/build_submission.py --team 김현수
 
 # 앞으로의 미커밋 변경을 검토할 때만 사용: 별도 apk/review/ 생성
-python3 scripts/build_submission.py --team 실제팀명 --review
+python3 scripts/build_submission.py --team 김현수 --review
 ```
 
 기본 명령은 소스가 미커밋이면 중단한다. `--review`만 미커밋 소스를 허용하며 정확한 파일별 해시를 기록하고 `source_commit`은 `null`로 표시한다. 최종 접수에는 기본 명령의 빌드를 사용한다. 서명 키·암호·참가자 개인 문서는 저장소에 추가하지 않는다.
@@ -40,11 +40,18 @@ python3 scripts/build_submission.py --team 실제팀명 --review
 
 ```sh
 .venv/bin/python -m pytest backend/tests -q
-cd VOLTRO
-JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+(cd VOLTRO && JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug)
 ```
 
-저장소 루트에서 `python3 scripts/check_android.py --serial <ID>`는 오프라인 8개 검사를 실행한다. `--roads`, `--pleos-layout`, `--pleos-vehicle`은 네트워크·기기 조건에 따라 별도 실행한다. `python3 scripts/check_contest_release.py --serial <별도 에뮬레이터 ID> --record`는 signed release의 실제 강제 종료·복구·세 가지 시나리오를 검사하고 화면 녹화를 생성한다. 최종 APK를 검사할 때는 `--apk apk/VOLTRO_VOLTRO_release.apk`를 지정한다. debug 서명이 이미 설치된 장치에서는 설치가 실패하며 앱 데이터를 삭제하지 않는다.
+저장소 루트에서 `python3 scripts/check_android.py --serial <ID>`는 오프라인 8개 검사를 실행한다. `--roads`, `--pleos-layout`, `--pleos-vehicle`은 네트워크·기기 조건에 따라 별도 실행한다. `python3 scripts/check_contest_release.py --serial <별도 에뮬레이터 ID> --record`는 signed release의 실제 강제 종료·복구·세 가지 시나리오를 검사하고 화면 녹화를 생성한다. 최종 APK를 검사할 때는 `--apk apk/김현수_VOLTRO_release.apk`를 지정한다. debug 서명이 이미 설치된 장치에서는 설치가 실패하며 앱 데이터를 삭제하지 않는다.
+
+## 저장소 제출 및 접수 메일
+
+- 저장소 주소: `https://github.com/qqaazz0222/VOLTRO`
+- APK 파일 경로: `apk/김현수_VOLTRO_release.apk` (소스와 같은 저장소에 포함)
+- 최종 제출 커밋: 제출 릴리즈 본문의 전체 해시 또는 `git rev-parse 'v1.2.0-mvp-submission^{commit}'`로 확인. 접수 메일에 저장소 주소와 함께 기재한다.
+- 현재 저장소는 **Public**이다. 안내에 따라 **2026-11-23까지** 공개 상태를 유지한다. 비공개로 변경하는 경우에는 **2026-11-16(월)까지** 다시 공개해야 개발 산출물 가산점 조건을 충족한다.
+- 비공개 상태로 제출할 때 심사용 계정을 Collaborator로 초대할 필요는 없다. 공개가 어려우면 소스와 APK를 함께 압축한 파일의 다운로드 주소를 접수 마감 전까지 접수 메일로 보내는 대안을 따른다.
 
 ## 접수 시 참가자가 확정할 항목
 

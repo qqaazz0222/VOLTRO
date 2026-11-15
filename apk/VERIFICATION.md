@@ -1,11 +1,13 @@
 # VOLTRO 1.2.0 release 검증 기록
 
-검증일: 2026-11-13 KST. **1.2.0-mvp / versionCode 5**, application ID `com.qqaazz0222.voltro`, min API 28.
+UI 검증일: 2026-11-13 KST. 제출 패키징 재검증: 2026-11-15 KST. **1.2.0-mvp / versionCode 5**, application ID `com.qqaazz0222.voltro`, min API 28.
 
-- 앱 소스 커밋: `66927c93e3e4a4b3acc202efe40d4a9e17974145`
+- 최초 UI 검증에 대응하는 앱 소스 커밋: `66927c93e3e4a4b3acc202efe40d4a9e17974145`
 - APK SHA-256: `0371726acdffeda1828dbf568cc7143bc8fea35509e4630e7b2e48505479ed4e`
-- 파일: `VOLTRO_VOLTRO_release.apk` / 4,562,012 bytes
-- non-debuggable release, zipalign 및 v3 서명 검증 통과. 공개 인증서 fingerprint와 상세 정보는 [메타데이터](VOLTRO_VOLTRO_release.json)에 있다.
+- 파일: `김현수_VOLTRO_release.apk` / 4,562,012 bytes
+- non-debuggable release, zipalign 및 v3 서명 검증 통과. 공개 인증서 fingerprint와 상세 정보는 [메타데이터](김현수_VOLTRO_release.json)에 있다.
+
+2026-11-15 재패키징은 앱 기능 변경 없이 등록 팀명·제출 문서·패키징 및 검증 경로를 정리한 것이다. 현재 APK의 빌드 소스 커밋은 메타데이터에서 확인한다. 제출 릴리즈 태그는 완성된 APK와 메타데이터를 포함하는 최종 제출 커밋을 가리킨다.
 
 ## 실제 release UI 검증
 
@@ -26,4 +28,4 @@ Python 26개, Kotlin JVM 18개 통과. Pleos Connect 2.1.0의 오프라인 여�
 
 [기존 1.1.0 APK와 검증 기록](archive/1.1.0/) 및 해당 버전의 사용자 가이드는 보존했다. 신규 Pleos 화면은 [출품 자료](../docs/submission/README.md)의 원본 캡처 정보를 따른다.
 
-지도·도로는 공개 공급자 응답, 주행은 재생, 에너지는 추정이다. 실차 GPS·실측 에너지 정확도·차량 내비 제어·Pleos Market 인증을 완료했다는 뜻은 아니다. 최종 접수에는 등록 팀명·참가자 동의/서명·저장소 및 영상 공유 경로를 확정한다. 원격 푸시·공개 설정 변경·접수는 수행하지 않았다.
+지도·도로는 공개 공급자 응답, 주행은 재생, 에너지는 추정이다. 실차 GPS·실측 에너지 정확도·차량 내비 제어·Pleos Market 인증을 완료했다는 뜻은 아니다. 등록 팀명 `김현수`를 파일명에 반영한다. 소스와 APK는 `main` 및 제출 릴리즈에서 제공하며 최종 접수에는 참가자 동의/서명과 접수 메일·페이지 입력이 필요하다.

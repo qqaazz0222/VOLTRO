@@ -1,21 +1,73 @@
 # VOLTRO
 
+전기차의 SOC와 전비로 경로별 예상 소비량·도착 잔량을 비교하고 절전 경로 선택을 돕는 Pleos용 주행 의사결정 보조 앱입니다.
+
 Your Route. Your Energy.
 
-## 1.2.0 출품 검토 버전 (2026-11-13)
+## 제출 정보 (2026-11-15)
 
-[신규 signed release APK](apk/VOLTRO_VOLTRO_release.apk) · [2분 30초 시연 영상](docs/submission/VOLTRO_Demo.mp4) · [기획 원고·시연 대본·검토 안내](docs/submission/README.md) · [APK 버전·소스 커밋·서명](apk/VOLTRO_VOLTRO_release.json)
+| 항목 | 제출 내용 |
+|---|---|
+| 팀명 / 앱 이름 | 김현수 / VOLTRO |
+| GitHub 저장소 | https://github.com/qqaazz0222/VOLTRO |
+| 소스 코드 | Android 앱: `VOLTRO/`, 선택적 개발 서버: `backend/` |
+| APK 파일 경로 | [`apk/김현수_VOLTRO_release.apk`](apk/김현수_VOLTRO_release.apk) |
+| GitHub Release | [VOLTRO 1.2.0 MVP 제출본](https://github.com/qqaazz0222/VOLTRO/releases/tag/v1.2.0-mvp-submission) |
+| 버전 / 지원 OS | `1.2.0-mvp` / Android 9(API 28) 이상 |
+| 공개 상태 | Public (2026-11-15 확인). 제출 안내에 따라 2026-11-23까지 공개 상태를 유지해야 합니다. |
+
+APK는 약 4.56MB이며 소스 코드와 함께 저장소의 `apk/`에 포함합니다. 제출 페이지에는 위 저장소 주소와 APK 파일 경로를 입력합니다. 접수 메일에는 저장소 주소와 **최종 제출 커밋 전체 해시**를 기재합니다. Release 본문에 기록한 최종 제출 커밋을 사용하며, 로컬에서는 아래 명령으로 확인할 수 있습니다.
+
+```sh
+git fetch origin tag v1.2.0-mvp-submission
+git rev-parse 'v1.2.0-mvp-submission^{commit}'
+```
+
+APK JSON의 `source_commit`은 빌드에 사용한 소스 커밋입니다. 최종 제출 커밋에는 그 소스와 완성된 APK·JSON·체크섬이 모두 포함되므로 빌드 소스 커밋과 다를 수 있습니다.
+
+## APK 설치 및 빠른 실행
+
+Android 9(API 28) 이상 또는 Pleos Connect 에뮬레이터에 APK를 설치합니다. Android SDK의 `platform-tools`를 PATH에 추가한 환경에서는 다음과 같이 실행합니다.
+
+```sh
+adb install -r 'apk/김현수_VOLTRO_release.apk'
+adb shell am start -n com.qqaazz0222.voltro/.MainActivity
+```
+
+- 인터넷 없이 실행: **Home → 오프라인 데모 → 강릉역 → 경로 분석하기 → 빠른 경로 → Mock 주행 → 분기점 승인 → 리포트**.
+- 실제 지도 실행: 인터넷을 연결한 뒤 **Home → 실제 도로 → 목적지 → 경로 분석하기**. 지도·경로 API 키와 별도 서버는 필요 없습니다. SOC가 부족하면 차량 입력을 조정한 뒤 다시 분석합니다.
+- Pleos 차량 상태 읽기는 Pleos Vehicle Service가 제공되는 에뮬레이터에서 사용합니다. 일반 Android에서는 수동 입력과 오프라인 데모를 사용할 수 있습니다.
+- 같은 앱 ID의 debug APK가 설치되어 있으면 서명이 달라 업데이트 설치가 실패할 수 있습니다. 별도 에뮬레이터를 사용해 기존 데이터를 보존합니다.
+
+## 테스트 환경 및 필요한 설정
+
+| 항목 | 확인된 환경 / 설정 |
+|---|---|
+| 개발 에뮬레이터 | Pleos Connect **2.1.0**, Android **14/API 34**, arm64 |
+| Pleos 화면 규격 | 전체 **2560×1440 px / 160 dpi**, 확장 앱 영역 관찰값 **1682×1210 px** |
+| 일반 Android 검증 | **API 37**, **1080×2400 px / 420 dpi** |
+| Vehicle SDK / Service | SDK **2.3.2** / Pleos Vehicle Service **2.3.22** (선택적 차량 상태 읽기) |
+| 앱 빌드 | Android Studio bundled JDK, 포함된 Gradle wrapper, Android SDK **37**, SDK Build Tools |
+| 개발 서버 | Python **3.11 이상**, FastAPI. Release의 지도·오프라인 시연에는 불필요 |
+| 네트워크 | 실제 지도·도로: HTTPS OSM/OSRM 연결 필요. 오프라인 데모: 불필요 |
+| SDK 경로 | Android Studio에서 설정하거나 `VOLTRO/local.properties`의 `sdk.dir` 또는 `ANDROID_HOME` 지정 |
+
+빌드 명령과 개발 서버 설정은 아래 개발 환경 및 서버 연동 항목을 참고합니다. Release 빌드에서는 로컬 HTTP 개발 서버가 비활성화됩니다.
+
+## 1.2.0 제출 버전
+
+[신규 signed release APK](apk/김현수_VOLTRO_release.apk) · [2분 30초 시연 영상](docs/submission/VOLTRO_Demo.mp4) · [기획 원고·시연 대본·제출 안내](docs/submission/README.md) · [APK 버전·소스 커밋·서명](apk/김현수_VOLTRO_release.json)
 
 - Home의 **심사 시연 시나리오**에서 절전 전환·잔량 부족·경로 변경 실패를 준비한다. 데모 입력은 저장된 프로필과 완료 이력을 바꾸지 않는다.
 - 비교 화면에 추천 근거·최소 잔량 여유·전비 20% 저하 가정과 잔량 부족 시 최소 출발 SOC·추가 배터리 에너지를 표시한다. 저하 가정은 통계적 오차 범위가 아니다.
 - 재생 중 프로세스가 종료되면 Home의 **이전 재생 복구**로 마지막 체크포인트를 불러온다. 복구 후에는 항상 일시정지하며 분기점 승인도 보존한다. 24시간 유효한 기기 내 임시 기록이다.
 - 경로 변경 실패는 기존 경로를 유지하고 재생을 정지한다. 완료 리포트는 출발 경로 대비 계산상 에너지·시간 변화를 표시한다.
 
-로컬 `codex/contest-readiness-1.2` 브랜치에서 구현과 제출 산출물을 분리해 커밋한다. 최신 APK의 정확한 앱 소스 커밋·SHA-256·서명은 JSON에 기록한다. 원격 푸시·공개 설정 변경·접수는 진행하지 않는다. 기존 1.1.0 배포본은 [보관 폴더](apk/archive/1.1.0/)에 보존했으며 기존 사용자 가이드는 해당 버전 기준이다.
+제출 소스와 APK는 `main`에 커밋·푸시하며 제출 태그로 고정한다. 최신 APK의 정확한 빌드 소스 커밋·SHA-256·서명은 JSON에 기록한다. 기존 1.1.0 배포본은 [보관 폴더](apk/archive/1.1.0/)에 보존했으며 기존 사용자 가이드는 해당 버전 기준이다.
 
 전기차의 SOC와 전비로 경로별 예상 소비량·도착 잔량을 비교하고 분기점의 에너지 절약 효과를 안내하는 Pleos용 주행 의사결정 보조 앱입니다. OpenStreetMap 실제 지도와 OSRM 도로 경로를 연결하며, 주행은 도로 좌표 재생입니다. 차량 SOC·전비는 선택적으로 공식 Vehicle SDK에서 읽을 수 있습니다.
 
-**기존 1.1.0 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/archive/1.1.0/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/archive/1.1.0/VOLTRO_VOLTRO_release.json). 팀명 파일 라벨 `VOLTRO`는 실제 등록 팀명에 맞춰 바꿀 수 있습니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
+**기존 1.1.0 시연용 release:** [VOLTRO_VOLTRO_release.apk](apk/archive/1.1.0/VOLTRO_VOLTRO_release.apk) · [소스 커밋/해시/서명 정보](apk/archive/1.1.0/VOLTRO_VOLTRO_release.json). 이전 파일명은 보관용이며 제출본은 등록 팀명 `김현수`를 사용합니다. 정식 Pleos Market 배포 인증을 받은 APK는 아닙니다.
 
 **기존 1.1.0의 실제 Pleos 화면 10개를 담은 12쪽 사용자 가이드:** [PDF](docs/user-guide/VOLTRO_User_Guide.pdf) · [Word](docs/user-guide/VOLTRO_User_Guide.docx) · [캡처 정보와 문서 재생성](docs/user-guide/README.md).
 
@@ -41,8 +93,7 @@ API 확인: `http://127.0.0.1:8000/health`, OpenAPI: `http://127.0.0.1:8000/docs
 Android Studio에서 `VOLTRO/`를 열어 `app` 실행. 터미널 빌드는 macOS 기준:
 
 ```sh
-cd VOLTRO
-JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest
+(cd VOLTRO && JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest)
 ```
 
 ```sh
@@ -88,8 +139,7 @@ JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradle
 .venv/bin/python -m pytest backend/tests -q
 
 # Android 빌드/계산 테스트/lint
-cd VOLTRO
-JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+(cd VOLTRO && JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug)
 ```
 
 저장소 루트에서 에뮬레이터를 켠 상태로:
@@ -130,7 +180,7 @@ Pleos에서 APK 재설치 직후 SDK capability 응답 timeout도 관찰했다. 
 
 개발용 APK: `VOLTRO/app/build/outputs/apk/debug/app-debug.apk`.
 
-공모전용 APK는 `apk/VOLTRO_VOLTRO_release.apk`이며 release 빌드·zipalign·v3 서명·non-debuggable 확인 후 패키징한다. 서명키와 암호는 저장소 밖에 보관한다. 소스 커밋이 확정된 상태에서 `python3 scripts/build_submission.py --team VOLTRO`로 다시 만들 수 있다. [패키징 설명](apk/README.md)을 참고한다.
+공모전용 APK는 `apk/김현수_VOLTRO_release.apk`이며 release 빌드·zipalign·v3 서명·non-debuggable 확인 후 패키징한다. 서명키와 암호는 저장소 밖에 보관한다. 소스 커밋이 확정된 상태에서 `python3 scripts/build_submission.py --team 김현수`로 다시 만들 수 있다. [패키징 설명](apk/README.md)을 참고한다.
 
 서명된 release의 실제 UI 시연 검사는 `python3 scripts/smoke_submission.py --serial <장치ID>`로 실행한다. `--roads`를 추가하면 실제 OSM/OSRM 도로 모드를 검사한다. debug 앱과 서명이 다르므로 기존 앱을 삭제하지 말고 별도 에뮬레이터 데이터를 사용한다. 스크립트는 설치 실패 시 데이터 삭제를 시도하지 않는다.
 

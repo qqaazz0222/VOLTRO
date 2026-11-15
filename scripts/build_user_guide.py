@@ -25,7 +25,7 @@ OUT = ROOT / "docs/user-guide"
 SHOTS = OUT / "screenshots"
 # Match the retained captures to their release, even after the current APK advances.
 CAPTURE = json.loads((OUT / "CAPTURE_INFO.json").read_text())
-RELEASE = next((data for path in [ROOT / "apk/VOLTRO_VOLTRO_release.json", *sorted((ROOT / "apk/archive").glob("*/VOLTRO_VOLTRO_release.json"))]
+RELEASE = next((data for path in [ROOT / "apk/김현수_VOLTRO_release.json", *sorted((ROOT / "apk/archive").glob("*/VOLTRO_VOLTRO_release.json"))]
     if path.exists() and (data := json.loads(path.read_text()))["sha256"] == CAPTURE["release_apk_sha256"]), None)
 if RELEASE is None:
     raise SystemExit("No release metadata matches CAPTURE_INFO.json; recapture or restore the matching archive.")

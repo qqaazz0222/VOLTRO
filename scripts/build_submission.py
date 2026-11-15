@@ -12,7 +12,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
-parser.add_argument("--team", default="VOLTRO", help="filename team label; replace with your registered team name")
+parser.add_argument("--team", default="김현수", help="registered team name used in the APK filename")
 parser.add_argument("--review", action="store_true", help="build a local review release from uncommitted sources, with a hashed source manifest; does not replace the submitted APK")
 args = parser.parse_args()
 if not re.fullmatch(r"[\w-]{1,48}", args.team):
