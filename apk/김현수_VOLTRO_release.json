@@ -1,9 +1,9 @@
 {
-  "apk": "VOLTRO_VOLTRO_release.apk",
+  "apk": "김현수_VOLTRO_release.apk",
   "application_id": "com.qqaazz0222.voltro",
   "version_code": 5,
   "version_name": "1.2.0-mvp",
-  "source_commit": "66927c93e3e4a4b3acc202efe40d4a9e17974145",
+  "source_commit": "8578fbf883296beb58f80575cd78133e9ac1affc",
   "sha256": "0371726acdffeda1828dbf568cc7143bc8fea35509e4630e7b2e48505479ed4e",
   "size_bytes": 4562012,
   "certificate_sha256": "9e8abf31fa053abb2991f5fd9573b2ea51d48e95fc9e79bddcfdc4c4a773a75e",
